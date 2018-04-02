@@ -33,7 +33,7 @@ public class HashedCredentialLdapRealmTest {
     @Test
     public void testLogInLdap() {
         IniFactorySupport<org.apache.shiro.mgt.SecurityManager> factory =
-                new IniSecurityManagerFactory("classpath:org/apache/zeppelin/realm/extend/reaml/shiro.ini");
+                new IniSecurityManagerFactory("classpath:shiro.ini");
         org.apache.shiro.mgt.SecurityManager securityManager = factory.getInstance();
         SecurityUtils.setSecurityManager(securityManager);
         Subject currentUser = SecurityUtils.getSubject();
@@ -41,6 +41,9 @@ public class HashedCredentialLdapRealmTest {
         token.setUsername("ldaptest3");
         token.setPassword("123456".toCharArray());
         Subject loginUser =  factory.getInstance().login(currentUser,token);
+        System.out.println(loginUser.getPrincipal());
+        System.out.println("aa");
+
     }
 
     @Test
@@ -51,8 +54,8 @@ public class HashedCredentialLdapRealmTest {
         SecurityUtils.setSecurityManager(securityManager);
         Subject currentUser = SecurityUtils.getSubject();
         UsernamePasswordToken token = new UsernamePasswordToken();
-        token.setUsername("user1");
-        token.setPassword("user1".toCharArray());
+        token.setUsername("admin");
+        token.setPassword("password".toCharArray());
         Subject loginUser =  factory.getInstance().login(currentUser,token);
         System.out.println(loginUser.getPrincipal());
     }
