@@ -22,6 +22,7 @@ import javax.naming.ldap.LdapContext;
 
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.realm.ldap.LdapContextFactory;
 import org.apache.shiro.realm.ldap.LdapUtils;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
@@ -43,6 +44,8 @@ public class HashedCredentialLdapRealm extends LdapRealm {
     encoder.setEncodeHashAsBase64(true);
     credentials = encoder.encodePassword(credentials.toString(), null);
     principal = getLdapPrincipal(token);
+    UsernamePasswordToken usernamePasswordToken = (UsernamePasswordToken) token;
+    usernamePasswordToken.setPassword(((String) credentials).toCharArray());
     LdapContext ctx = null;
     try {
       ctx = ldapContextFactory.getLdapContext(principal, credentials);
