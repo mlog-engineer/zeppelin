@@ -47,7 +47,11 @@ while getopts "hp:d:l:v:u:" o; do
             if [[ -z "$ZEPPELIN_IMPERSONATE_CMD" ]]; then
               ZEPPELIN_IMPERSONATE_RUN_CMD=`echo "ssh ${ZEPPELIN_IMPERSONATE_USER}@localhost" `
             else
-              ZEPPELIN_IMPERSONATE_RUN_CMD=$(eval "echo ${ZEPPELIN_IMPERSONATE_CMD} ")
+              if [[ "${INTERPRETER_ID}" == "spark" ]]; then
+                 ZEPPELIN_IMPERSONATE_RUN_CMD= "bash -c";
+              else
+                 ZEPPELIN_IMPERSONATE_RUN_CMD=$(eval "echo ${ZEPPELIN_IMPERSONATE_CMD} ")
+              fi
             fi
             ;;
         esac

@@ -607,6 +607,20 @@ public class SparkInterpreter extends Interpreter {
       }
     }
 
+    if (getProperty().containsKey("spark.yarn.proxy.user.keytab") &&
+          getProperty().containsKey("spark.yarn.proxy.user.principal")) {
+      String keytab = getProperty().getProperty("spark.yarn.proxy.user.keytab");
+      String principal = getProperty().getProperty("spark.yarn.proxy.user.principal");
+      if (keytab != null && principal != null) {
+        String cmd = "kinit -kt " + keytab + " " + principal;
+        try {
+          Runtime.getRuntime().exec(cmd);
+        } catch (IOException e) {
+          throw  new RuntimeException("init kerberos failed:" + e);
+        }
+      }
+    }
+
     conf = new SparkConf();
     URL[] urls = getClassloaderUrls();
 

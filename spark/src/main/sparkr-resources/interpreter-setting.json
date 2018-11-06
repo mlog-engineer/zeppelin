@@ -53,6 +53,18 @@
         "propertyName": "spark.master",
         "defaultValue": "local[*]",
         "description": "Spark master uri. ex) spark://masterhost:7077"
+      },
+      "spark.yarn.proxy.user.keytab": {
+        "envName": null,
+        "propertyName": "spark.yarn.proxy.user.keytab",
+        "defaultValue": "",
+        "description": "keytab file for proxyuser"
+      }
+    ,"spark.yarn.proxy.user.principal": {
+        "envName": null,
+        "propertyName": "spark.yarn.proxy.user.principal",
+        "defaultValue": "",
+        "description": "principal file for proxyuser"
       }
     },
     "editor": {
