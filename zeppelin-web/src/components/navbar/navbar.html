@@ -11,16 +11,14 @@ limitations under the License.
 -->
 
 <div class="navbar navbar-inverse navbar-fixed-top" style="display: none;" role="navigation" ng-class="{'displayNavBar': !asIframe}">
-  <div class="container">
+  <div class="container container-border">
     <div class="navbar-header">
       <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="#/">
-        <img style="margin-top: -7px;" src="assets/images/zepLogoW.png" width="50" alt="I'm zeppelin" /> Zeppelin
-      </a>
+     
     </div>
 
     <div class="collapse navbar-collapse" ng-controller="NavCtrl as navbar">
@@ -77,12 +75,13 @@ limitations under the License.
             </div>
           </form>
         </li>
-        <li style="margin-left: 10px;">
+
+        <li  ng-if="!ticket || ticket.roles == '[admin]'"  style="margin-left: 10px;">
           <div class="dropdown">
             <i ng-if="navbar.connected" class="fa fa-circle server-connected"
-               uib-tooltip="WebSocket Connected" tooltip-placement="bottom" style="margin-top: 7px; margin-right: 0px; vertical-align: top"></i>
+              uib-tooltip="WebSocket Connected" tooltip-placement="bottom" style="margin-top: 7px; margin-right: 0px; vertical-align: top"></i>
             <i ng-if="!navbar.connected" class="fa fa-circle server-disconnected"
-               uib-tooltip="WebSocket Disconnected" tooltip-placement="bottom" style="margin-top: 7px; vertical-align: top"></i>
+              uib-tooltip="WebSocket Disconnected" tooltip-placement="bottom" style="margin-top: 7px; vertical-align: top"></i>
             <button ng-if="ticket" class="nav-btn dropdown-toggle" type="button" data-toggle="dropdown" style="margin:11px 5px 0 0; padding-left: 0px;">
               <span class="username">{{ticket.principal}}</span>
               <span class="caret" style="margin-bottom: 8px"></span>
@@ -101,11 +100,12 @@ limitations under the License.
             </ul>
           </div>
         </li>
-        <li class="nav-component" ng-if="!ticket">
+        <li ng-if="!ticket" class="nav-component">
           <button class="btn nav-login-btn" data-toggle="modal" data-target="#loginModal"
                   ng-click="navbar.showLoginWindow()">Login
           </button>
         </li>
+        
       </ul>
     </div>
   </div>
@@ -124,7 +124,6 @@ limitations under the License.
 
         <div class="row about">
           <div class="hidden-xs col-sm-4 logo">
-            <img src="assets/images/zepLogo.png" alt="Apache Zeppelin" title="Apache Zeppelin" />
           </div>
           <div class="col-xs-12 col-sm-8 content">
             <h3>Apache Zeppelin</h3>

@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.servlet.DispatcherType;
@@ -28,7 +29,9 @@ import javax.ws.rs.core.Application;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.jaxrs.servlet.CXFNonSpringJaxrsServlet;
+import org.apache.shiro.web.env.EnvironmentLoader;
 import org.apache.shiro.web.env.EnvironmentLoaderListener;
+import org.apache.shiro.web.env.WebEnvironment;
 import org.apache.shiro.web.servlet.ShiroFilter;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.conf.ZeppelinConfiguration.ConfVars;
@@ -166,7 +169,6 @@ public class ZeppelinServer extends Application {
 
     ZeppelinConfiguration conf = ZeppelinConfiguration.create();
     conf.setProperty("args", args);
-
     jettyWebServer = setupJettyServer(conf);
 
     ContextHandlerCollection contexts = new ContextHandlerCollection();
@@ -195,6 +197,17 @@ public class ZeppelinServer extends Application {
       System.exit(-1);
     }
     LOG.info("Done, zeppelin server started");
+    //setup securitymanager
+    while (true) {
+      WebEnvironment webEnvironment =
+          (WebEnvironment) webApp.getServletContext()
+              .getAttribute(EnvironmentLoader.ENVIRONMENT_ATTRIBUTE_KEY);
+      if (webEnvironment != null) {
+        SecurityUtils.initSecurityManager(webEnvironment.getWebSecurityManager());
+        break;
+      }
+      Thread.sleep(20);
+    }
 
     Runtime.getRuntime().addShutdownHook(new Thread(){
       @Override public void run() {
@@ -321,7 +334,6 @@ public class ZeppelinServer extends Application {
     String shiroIniPath = conf.getShiroPath();
     if (!StringUtils.isBlank(shiroIniPath)) {
       webapp.setInitParameter("shiroConfigLocations", new File(shiroIniPath).toURI().toString());
-      SecurityUtils.initSecurityManager(shiroIniPath);
       webapp.addFilter(ShiroFilter.class, "/api/*", EnumSet.allOf(DispatcherType.class));
       webapp.addEventListener(new EnvironmentLoaderListener());
     }

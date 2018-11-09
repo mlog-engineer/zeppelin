@@ -50,6 +50,7 @@ body .navbar {
   margin-right: auto;
   margin-left: auto;
   width: auto;
+  border: 2px solid #E5E5E5
 }
 
 .notebook-list-btn {
@@ -60,17 +61,17 @@ body .navbar {
 }
 
 .navbar-inverse {
-  background: #3071a9;
-  color: #fff;
-  border-color: #3071a9;
+  background: #fff;
+  color: #33a3ff;
+  border-color: #fff;
   font-size: 18px;
 }
 
 .navbar-inverse .navbar-nav > .open > a,
 .navbar-inverse .navbar-nav > .open > a:hover,
 .navbar-inverse .navbar-nav > .open > a:focus {
-  color: #fff;
-  background: #3071a9;
+  color: #33a3ff;
+  background: #fff;
 }
 
 .navbar-inverse .navbar-toggle:hover,
@@ -80,7 +81,7 @@ body .navbar {
 
 .navbar-inverse .navbar-nav > li > a:hover,
 .navbar-inverse .navbar-nav > li > a:focus {
-  color: #fff;
+  color: #33a3ff;
   background: rgba(0, 0, 0, 0.2);
 
 }
@@ -92,12 +93,12 @@ body .navbar {
 .navbar-inverse .navbar-nav > .active > a,
 .navbar-inverse .navbar-nav > .active > a:hover,
 .navbar-inverse .navbar-nav > .active > a:focus {
-  color: #fff;
-  background: #080808;
+  color: #33a3ff;
+  background: #fff;
 }
 
 .navbar-inverse .navbar-nav > li > a {
-  color: #FFFFFF;
+  color: #333;
 }
 
 .navbar-inverse .navbar-brand {
@@ -320,7 +321,7 @@ a.navbar-brand:hover {
 }
 
 .nav-btn {
-  color: #fff;
+  color: #000000;
   background-color: transparent;
   border-color: transparent;
   font-size: 14px;
@@ -393,13 +394,11 @@ a.navbar-brand:hover {
 }
 
 .zeppelin {
-  background: url('../assets/images/zepLogo.png') no-repeat right;
   height: 380px;
   opacity: 0.2;
 }
 
 .zeppelin2 {
-  background: url('../assets/images/zepLogo.png') no-repeat right;
   background-position-y: 12px;
   height: 380px;
   opacity: 0.2;
