@@ -464,11 +464,11 @@ public class ZeppelinConfiguration extends XMLConfiguration {
 
   public List<String> getAllowedOrigins()
   {
-    if (getString(ConfVars.ZEPPELIN_ALLOWED_ORIGINS).isEmpty()) {
+    String allowedOrigins = getString(ConfVars.ZEPPELIN_ALLOWED_ORIGINS);
+    if (allowedOrigins.isEmpty()) {
       return Arrays.asList(new String[0]);
     }
-
-    return Arrays.asList(getString(ConfVars.ZEPPELIN_ALLOWED_ORIGINS).toLowerCase().split(","));
+    return Arrays.asList(allowedOrigins.toLowerCase().split(","));
   }
 
   public String getWebsocketMaxTextMessageSize() {

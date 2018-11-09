@@ -50,10 +50,8 @@ public class SecurityUtils {
   private static final HashSet<String> EMPTY_HASHSET = Sets.newHashSet();
   private static boolean isEnabled = false;
   private static final Logger log = LoggerFactory.getLogger(SecurityUtils.class);
-  
-  public static void initSecurityManager(String shiroPath) {
-    IniSecurityManagerFactory factory = new IniSecurityManagerFactory("file:" + shiroPath);
-    SecurityManager securityManager = factory.getInstance();
+
+  public static void initSecurityManager(org.apache.shiro.mgt.SecurityManager securityManager) {
     org.apache.shiro.SecurityUtils.setSecurityManager(securityManager);
     isEnabled = true;
   }
@@ -67,10 +65,8 @@ public class SecurityUtils {
       sourceUriHost = new URI(sourceHost).getHost();
       sourceUriHost = (sourceUriHost == null) ? "" : sourceUriHost.toLowerCase();
     }
-
     sourceUriHost = sourceUriHost.toLowerCase();
     String currentHost = InetAddress.getLocalHost().getHostName().toLowerCase();
-
     return conf.getAllowedOrigins().contains("*") ||
         currentHost.equals(sourceUriHost) ||
         "localhost".equals(sourceUriHost) ||

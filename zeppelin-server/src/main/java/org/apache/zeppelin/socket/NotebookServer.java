@@ -173,22 +173,24 @@ public class NotebookServer extends WebSocketServlet
         LOG.trace("RECEIVE MSG = " + messagereceived);
       }
 
+      /**
       String ticket = TicketContainer.instance.getTicket(messagereceived.principal);
       if (ticket != null &&
           (messagereceived.ticket == null || !ticket.equals(messagereceived.ticket))) {
         /* not to pollute logs, log instead of exception */
-        if (StringUtils.isEmpty(messagereceived.ticket)) {
-          LOG.debug("{} message: invalid ticket {} != {}", messagereceived.op,
-              messagereceived.ticket, ticket);
-        } else {
-          if (!messagereceived.op.equals(OP.PING)) {
-            conn.send(serializeMessage(new Message(OP.SESSION_LOGOUT).put("info",
-                "Your ticket is invalid possibly due to server restart. "
-                    + "Please login again.")));
-          }
-        }
-        return;
-      }
+        //if (StringUtils.isEmpty(messagereceived.ticket)) {
+        //  LOG.debug("{} message: invalid ticket {} != {}", messagereceived.op,
+        //      messagereceived.ticket, ticket);
+        //} else {
+        //  if (!messagereceived.op.equals(OP.PING)) {
+        //    conn.send(serializeMessage(new Message(OP.SESSION_LOGOUT).put("info",
+        //        "Your ticket is invalid possibly due to server restart. "
+        //            + "Please login again.")));
+        //  }
+       // }
+       // return;
+      //}
+
 
       ZeppelinConfiguration conf = ZeppelinConfiguration.create();
       boolean allowAnonymous = conf.isAnonymousAllowed();

@@ -37,7 +37,7 @@
     <cxf.version>2.7.8</cxf.version>
     <hadoop-common.version>2.6.0</hadoop-common.version>
     <quartz.scheduler.version>2.2.1</quartz.scheduler.version>
-    <jersey.servlet.version>1.13</jersey.servlet.version>
+    <jersey.servlet.version>1.17.1</jersey.servlet.version>
     <javax.ws.rsapi.version>2.0-m10</javax.ws.rsapi.version>
     <libpam4j.version>1.8</libpam4j.version>
     <jna.version>4.1.0</jna.version>
@@ -191,39 +191,45 @@
       <artifactId>websocket-server</artifactId>
       <version>${jetty.version}</version>
     </dependency>
-<!--
     <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-jsp</artifactId>
-      <version>${jetty.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.eclipse.jetty.orbit</groupId>
-          <artifactId>javax.servlet.jsp</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.eclipse.jetty.orbit</groupId>
-          <artifactId>javax.servlet</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.eclipse.jetty.orbit</groupId>
-          <artifactId>org.apache.jasper.glassfish</artifactId>
-        </exclusion>
-      </exclusions>
+      <groupId>org.apache.shiro</groupId>
+      <artifactId>shiro-ehcache</artifactId>
+      <version>${shiro.version}</version>
     </dependency>
 
-    <dependency>
-      <groupId>org.eclipse.jetty.orbit</groupId>
-      <artifactId>javax.servlet.jsp</artifactId>
-      <version>2.2.0.v201112011158</version>
-      <exclusions>
-        <exclusion>
+    <!--
+        <dependency>
+          <groupId>org.eclipse.jetty</groupId>
+          <artifactId>jetty-jsp</artifactId>
+          <version>${jetty.version}</version>
+          <exclusions>
+            <exclusion>
+              <groupId>org.eclipse.jetty.orbit</groupId>
+              <artifactId>javax.servlet.jsp</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>org.eclipse.jetty.orbit</groupId>
+              <artifactId>javax.servlet</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>org.eclipse.jetty.orbit</groupId>
+              <artifactId>org.apache.jasper.glassfish</artifactId>
+            </exclusion>
+          </exclusions>
+        </dependency>
+
+        <dependency>
           <groupId>org.eclipse.jetty.orbit</groupId>
-          <artifactId>javax.servlet</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
--->
+          <artifactId>javax.servlet.jsp</artifactId>
+          <version>2.2.0.v201112011158</version>
+          <exclusions>
+            <exclusion>
+              <groupId>org.eclipse.jetty.orbit</groupId>
+              <artifactId>javax.servlet</artifactId>
+            </exclusion>
+          </exclusions>
+        </dependency>
+    -->
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
