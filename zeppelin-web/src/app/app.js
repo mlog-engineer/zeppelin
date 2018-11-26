@@ -80,6 +80,10 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
         templateUrl: 'app/jobmanager/jobmanager.html',
         controller: 'JobmanagerCtrl'
       })
+      .when('/remoteinterpreter', {
+        templateUrl: 'app/remoteinterpreter/remoteinterpreter.html',
+        controller: 'RemoteinterpreterCtrl'
+      })
       .when('/interpreter', {
         templateUrl: 'app/interpreter/interpreter.html',
         controller: 'InterpreterCtrl'

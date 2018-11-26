@@ -71,7 +71,7 @@ function LoginCtrl($scope, $rootScope, $http, $httpParamSerializer, baseUrlSrv, 
       setTimeout(function() {
         $scope.loginParams = {};
         $scope.loginParams.errorText = data.info;
-        angular.element('.nav-login-btn').click();
+        //angular.element('.nav-login-btn').click();
       }, 1000);
       var locationPath = $location.path();
       $location.path('/').search('ref', locationPath);

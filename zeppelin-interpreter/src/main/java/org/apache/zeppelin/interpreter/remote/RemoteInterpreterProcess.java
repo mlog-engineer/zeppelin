@@ -24,6 +24,7 @@ import org.apache.zeppelin.interpreter.InterpreterGroup;
 import org.apache.zeppelin.interpreter.thrift.RemoteInterpreterService.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -39,6 +40,7 @@ public abstract class RemoteInterpreterProcess {
   private final RemoteInterpreterEventPoller remoteInterpreterEventPoller;
   private final InterpreterContextRunnerPool interpreterContextRunnerPool;
   private int connectTimeout;
+  protected Date startTime;
 
   public RemoteInterpreterProcess(
       int connectTimeout,
@@ -73,6 +75,7 @@ public abstract class RemoteInterpreterProcess {
         start(userName, isUserImpersonate);
       }
 
+      startTime  = new Date();
       if (clientPool == null) {
         clientPool = new GenericObjectPool<>(new ClientFactory(getHost(), getPort()));
         clientPool.setTestOnBorrow(true);
@@ -239,4 +242,9 @@ public abstract class RemoteInterpreterProcess {
   public InterpreterContextRunnerPool getInterpreterContextRunnerPool() {
     return interpreterContextRunnerPool;
   }
+
+  public Date getStartTime() {
+    return startTime;
+  }
+
 }
