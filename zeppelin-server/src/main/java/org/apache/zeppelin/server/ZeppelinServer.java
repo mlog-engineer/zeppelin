@@ -53,6 +53,7 @@ import org.apache.zeppelin.rest.InterpreterRestApi;
 import org.apache.zeppelin.rest.LoginRestApi;
 import org.apache.zeppelin.rest.NotebookRepoRestApi;
 import org.apache.zeppelin.rest.NotebookRestApi;
+import org.apache.zeppelin.rest.RemoteInterpreterRestApi;
 import org.apache.zeppelin.rest.SecurityRestApi;
 import org.apache.zeppelin.rest.ZeppelinRestApi;
 import org.apache.zeppelin.scheduler.SchedulerFactory;
@@ -398,6 +399,10 @@ public class ZeppelinServer extends Application {
 
     InterpreterRestApi interpreterApi = new InterpreterRestApi(interpreterSettingManager);
     singletons.add(interpreterApi);
+
+    RemoteInterpreterRestApi remoteInterpreterRestApi =
+      new RemoteInterpreterRestApi(interpreterSettingManager);
+    singletons.add(remoteInterpreterRestApi);
 
     CredentialRestApi credentialApi = new CredentialRestApi(credentials);
     singletons.add(credentialApi);
