@@ -54,7 +54,7 @@
   height: 120px;
   position: relative;
   margin: 5px;
-  flex: 1 1 calc((100% - 40px) / 4);
+  flex: 0 0 calc((100% - 40px) / 4);
 }
 .job-space{
   height: 100%;

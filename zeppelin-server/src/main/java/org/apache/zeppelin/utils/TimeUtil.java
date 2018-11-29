@@ -48,7 +48,7 @@ public class TimeUtil {
         PeriodType.dayTime());
     PeriodFormatterBuilder builder = new PeriodFormatterBuilder();
     if (period.getDays() > 0) {
-      builder.appendHours().appendSeparator("d ");
+      builder.appendDays().appendSeparator("d ");
     }
     if (period.getHours() > 0) {
       builder.appendHours().appendSeparator("h ");
