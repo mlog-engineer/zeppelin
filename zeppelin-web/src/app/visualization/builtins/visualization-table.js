@@ -66,6 +66,7 @@ export default class TableVisualization extends Visualization {
     this.passthrough = new PassthroughTransformation(config);
     this.emitTimeout = null;
     this.isRestoring = false;
+    this.isUpdated = false;
 
     initializeTableConfig(config, TABLE_OPTION_SPECS);
   }
@@ -82,13 +83,17 @@ export default class TableVisualization extends Visualization {
     return width;
   }
 
+  getSortedValue(a, b) {
+    return a > b ? 1 : a === b ? 0 : -1;
+  }
+
   createGridOptions(tableData, onRegisterApiCallback, config) {
     const rows = tableData.rows;
     const columnNames = tableData.columns.map((c) => c.name);
 
     const gridData = rows.map((r) => {
       return columnNames.reduce((acc, colName, index) => {
-        acc[colName] = r[index];
+        acc[colName + index] = r[index];
         return acc;
       }, {});
     });
@@ -102,24 +107,48 @@ export default class TableVisualization extends Visualization {
       flatEntityAccess: true,
       fastWatch: false,
       treeRowHeaderAlwaysVisible: false,
+      exporterExcelFilename: 'myFile.xlsx',
 
-      columnDefs: columnNames.map((colName) => {
+      columnDefs: columnNames.map((colName, index) => {
+        const self = this;
         return {
           displayName: colName,
-          name: colName,
+          name: colName + index,
           type: DefaultTableColumnType,
           cellTemplate: `
             <div ng-if="!grid.getCellValue(row, col).startsWith('%html')"
-                 class="ui-grid-cell-contents">
-              {{grid.getCellValue(row, col)}}
-            </div>
+                 class="ui-grid-cell-contents"><span>{{grid.getCellValue(row, col)}}</span></div>
             <div ng-if="grid.getCellValue(row, col).startsWith('%html')"
                  ng-bind-html="grid.getCellValue(row, col).split('%html')[1]"
                  class="ui-grid-cell-contents">
-            </div>
-          `,
+            </div>`,
+          editableCellTemplate:
+            `<div>
+               <form
+                 name="inputForm">
+                 <textarea
+                   class="ui-grid-zeppelin-special-textarea"
+                   type="INPUT_TYPE"
+                   ng-class="'colt' + col.uid"
+                   ui-grid-editor
+                   ng-model="MODEL_COL_FIELD" />
+               </form>
+             </div>
+             `,
           minWidth: this.getColumnMinWidth(colName),
           width: '*',
+          sortingAlgorithm: function(a, b, row1, row2, sortType, gridCol) {
+            const colType = gridCol.colDef.type.toLowerCase();
+            if (colType === TableColumnType.NUMBER) {
+              return self.getSortedValue(a, b);
+            } else if (colType === TableColumnType.STRING) {
+              return self.getSortedValue(a.toString(), b.toString());
+            } else if (colType === TableColumnType.DATE) {
+              return self.getSortedValue(new Date(a), new Date(b));
+            } else {
+              return self.getSortedValue(a, b);
+            }
+          },
         };
       }),
       rowEditWaitInterval: -1, /** disable saveRow event */
@@ -201,6 +230,15 @@ export default class TableVisualization extends Visualization {
     // SHOULD use `function() { ... }` syntax for each action to get `this`
     gridOptions.columnDefs.map((colDef) => {
       colDef.menuItems = [
+        {
+          title: 'Copy Column Name',
+          action: function() {
+            self.copyStringToClipboard(this.context.col.displayName);
+          },
+          active: function() {
+            return false;
+          },
+        },
         {
           title: 'Type: String',
           action: function() {
@@ -326,6 +364,17 @@ export default class TableVisualization extends Visualization {
       gridApi.colResizable.on.columnSizeChanged(scope, () => {
         self.persistConfigWithGridState(self.config);
       });
+      gridApi.edit.on.beginCellEdit(scope, function(rowEntity, colDef, triggerEvent) {
+        let textArea = triggerEvent.currentTarget.children[1].children[0].children[0];
+        textArea.style.height = textArea.scrollHeight + 'px';
+        textArea.addEventListener('keydown', function() {
+          let elem = this;
+          setTimeout(function() {
+            elem.style.height = 'auto';
+            elem.style.height = elem.scrollHeight + 'px';
+          });
+        }, 0);
+      });
 
       // pagination doesn't follow usual life-cycle in ui-grid v4.0.4
       // gridApi.pagination.on.paginationChanged(scope, () => { self.persistConfigWithGridState(self.config) })
@@ -334,16 +383,21 @@ export default class TableVisualization extends Visualization {
       // gridApi.selection.on.rowSelectionChangedBatch(scope, () => { self.persistConfigWithGridState(self.config) })
     };
 
-    if (!gridElem) {
+    if (!gridElem || this.isUpdated) {
+      if (this.isUpdated) {
+        this.targetEl.find(gridElem).off();
+        this.targetEl.find(gridElem).detach();
+        this.isUpdated = false;
+      }
       // create, compile and append grid elem
       gridElem = angular.element(
         `<div id="${gridElemId}" ui-grid="${gridElemId}"
-              ui-grid-edit ui-grid-row-edit 
-              ui-grid-pagination 
+              ui-grid-edit ui-grid-row-edit
+              ui-grid-pagination
               ui-grid-selection
               ui-grid-cellNav ui-grid-pinning
               ui-grid-empty-base-layer
-              ui-grid-resize-columns 
+              ui-grid-resize-columns
               ui-grid-move-columns
               ui-grid-grouping
               ui-grid-save-state
@@ -463,6 +517,12 @@ export default class TableVisualization extends Visualization {
           initializeTableConfig(configObj, TABLE_OPTION_SPECS);
           self.persistConfigWithGridState(configObj);
         },
+        applyTableOption: () => {
+          this.isUpdated = true;
+          // emit config to re-render table
+          configObj.initialized = true;
+          self.persistConfig(configObj);
+        },
         tableWidgetOnKeyDown: (event, optSpec) => {
           const code = event.keyCode || event.which;
           if (code === 13 && isInputWidget(optSpec)) {
@@ -475,5 +535,15 @@ export default class TableVisualization extends Visualization {
         },
       },
     };
+  }
+
+  copyStringToClipboard(copyString) {
+    const strToClipboard = document.createElement('textarea');
+    strToClipboard.value = copyString;
+    document.body.appendChild(strToClipboard);
+    strToClipboard.select();
+    document.execCommand('copy');
+    document.body.removeChild(strToClipboard);
+    return;
   }
 }

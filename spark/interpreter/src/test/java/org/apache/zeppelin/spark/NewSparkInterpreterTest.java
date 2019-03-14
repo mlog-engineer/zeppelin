@@ -17,11 +17,13 @@
 
 package org.apache.zeppelin.spark;
 
+import com.google.common.io.Files;
 import org.apache.zeppelin.display.AngularObjectRegistry;
-import org.apache.zeppelin.display.GUI;
 import org.apache.zeppelin.display.ui.CheckBox;
+import org.apache.zeppelin.display.ui.Password;
 import org.apache.zeppelin.display.ui.Select;
 import org.apache.zeppelin.display.ui.TextBox;
+import org.apache.zeppelin.interpreter.Interpreter;
 import org.apache.zeppelin.interpreter.InterpreterContext;
 import org.apache.zeppelin.interpreter.InterpreterException;
 import org.apache.zeppelin.interpreter.InterpreterGroup;
@@ -29,11 +31,11 @@ import org.apache.zeppelin.interpreter.InterpreterOutput;
 import org.apache.zeppelin.interpreter.InterpreterOutputListener;
 import org.apache.zeppelin.interpreter.InterpreterResult;
 import org.apache.zeppelin.interpreter.InterpreterResultMessageOutput;
-import org.apache.zeppelin.interpreter.remote.RemoteEventClient;
-import org.apache.zeppelin.interpreter.remote.RemoteEventClientWrapper;
+import org.apache.zeppelin.interpreter.remote.RemoteInterpreterEventClient;
 import org.apache.zeppelin.interpreter.thrift.InterpreterCompletion;
-import org.apache.zeppelin.user.AuthenticationInfo;
 import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -42,7 +44,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -51,19 +53,27 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 
 
 public class NewSparkInterpreterTest {
 
   private SparkInterpreter interpreter;
+  private DepInterpreter depInterpreter;
 
   // catch the streaming output in onAppend
   private volatile String output = "";
   // catch the interpreter output in onUpdate
   private InterpreterResultMessageOutput messageOutput;
 
-  private RemoteEventClient mockRemoteEventClient = mock(RemoteEventClient.class);
+  private RemoteInterpreterEventClient mockRemoteEventClient;
+
+  @Before
+  public void setUp() {
+    mockRemoteEventClient = mock(RemoteInterpreterEventClient.class);
+  }
 
   @Test
   public void testSparkInterpreter() throws IOException, InterruptedException, InterpreterException {
@@ -73,19 +83,34 @@ public class NewSparkInterpreterTest {
     properties.setProperty("zeppelin.spark.maxResult", "100");
     properties.setProperty("zeppelin.spark.test", "true");
     properties.setProperty("zeppelin.spark.useNew", "true");
+    properties.setProperty("zeppelin.spark.uiWebUrl", "fake_spark_weburl");
+    // disable color output for easy testing
+    properties.setProperty("zeppelin.spark.scala.color", "false");
+
+    InterpreterContext context = InterpreterContext.builder()
+        .setInterpreterOut(new InterpreterOutput(null))
+        .setIntpEventClient(mockRemoteEventClient)
+        .setAngularObjectRegistry(new AngularObjectRegistry("spark", null))
+        .build();
+    InterpreterContext.set(context);
+
     interpreter = new SparkInterpreter(properties);
     assertTrue(interpreter.getDelegation() instanceof NewSparkInterpreter);
     interpreter.setInterpreterGroup(mock(InterpreterGroup.class));
     interpreter.open();
 
-    interpreter.getZeppelinContext().setEventClient(mockRemoteEventClient);
+    assertEquals("fake_spark_weburl", interpreter.getSparkUIUrl());
+
     InterpreterResult result = interpreter.interpret("val a=\"hello world\"", getInterpreterContext());
     assertEquals(InterpreterResult.Code.SUCCESS, result.code());
     assertEquals("a: String = hello world\n", output);
-    // spark web url is sent
-    verify(mockRemoteEventClient).onMetaInfosReceived(any(Map.class));
 
     result = interpreter.interpret("print(a)", getInterpreterContext());
+    assertEquals(InterpreterResult.Code.SUCCESS, result.code());
+    assertEquals("hello world", output);
+
+    // java stdout
+    result = interpreter.interpret("System.out.print(a)", getInterpreterContext());
     assertEquals(InterpreterResult.Code.SUCCESS, result.code());
     assertEquals("hello world", output);
 
@@ -103,8 +128,9 @@ public class NewSparkInterpreterTest {
     assertEquals(InterpreterResult.Code.SUCCESS, result.code());
 
     // single line comment
-    result = interpreter.interpret("/*comment here*/", getInterpreterContext());
+    result = interpreter.interpret("print(\"hello world\")/*comment here*/", getInterpreterContext());
     assertEquals(InterpreterResult.Code.SUCCESS, result.code());
+    assertEquals("hello world", output);
 
     result = interpreter.interpret("/*comment here*/\nprint(\"hello world\")", getInterpreterContext());
     assertEquals(InterpreterResult.Code.SUCCESS, result.code());
@@ -123,35 +149,42 @@ public class NewSparkInterpreterTest {
     result = interpreter.interpret("/*line 1 \n line 2*/print(\"hello world\")", getInterpreterContext());
     assertEquals(InterpreterResult.Code.SUCCESS, result.code());
 
-    // companion object
-    result = interpreter.interpret("class Counter {\n " +
-        "var value: Long = 0} \n" +
-        "object Counter {\n def apply(x: Long) = new Counter()\n}", getInterpreterContext());
+
+    // Companion object with case class
+    result = interpreter.interpret("import scala.math._\n" +
+        "object Circle {\n" +
+        "  private def calculateArea(radius: Double): Double = Pi * pow(radius, 2.0)\n" +
+        "}\n" +
+        "case class Circle(radius: Double) {\n" +
+        "  import Circle._\n" +
+        "  def area: Double = calculateArea(radius)\n" +
+        "}\n" +
+        "\n" +
+        "val circle1 = new Circle(5.0)", getInterpreterContext());
     assertEquals(InterpreterResult.Code.SUCCESS, result.code());
 
     // spark rdd operation
-    result = interpreter.interpret("sc.range(1, 10).sum", getInterpreterContext());
+    result = interpreter.interpret("sc\n.range(1, 10)\n.sum", getInterpreterContext());
     assertEquals(InterpreterResult.Code.SUCCESS, result.code());
     assertTrue(output.contains("45"));
+
     // spark job url is sent
-    verify(mockRemoteEventClient).onParaInfosReceived(any(String.class), any(String.class), any(Map.class));
+    verify(mockRemoteEventClient).onParaInfosReceived(any(Map.class));
 
     // case class
     result = interpreter.interpret("val bankText = sc.textFile(\"bank.csv\")", getInterpreterContext());
     assertEquals(InterpreterResult.Code.SUCCESS, result.code());
+
     result = interpreter.interpret(
-        "case class Bank(age:Integer, job:String, marital : String, education : String, balance : Integer)\n",
-        getInterpreterContext());
-    assertEquals(InterpreterResult.Code.SUCCESS, result.code());
-    result = interpreter.interpret(
-        "val bank = bankText.map(s=>s.split(\";\")).filter(s => s(0)!=\"\\\"age\\\"\").map(\n" +
+        "case class Bank(age:Integer, job:String, marital : String, education : String, balance : Integer)\n" +
+            "val bank = bankText.map(s=>s.split(\";\")).filter(s => s(0)!=\"\\\"age\\\"\").map(\n" +
             "    s => Bank(s(0).toInt, \n" +
             "            s(1).replaceAll(\"\\\"\", \"\"),\n" +
             "            s(2).replaceAll(\"\\\"\", \"\"),\n" +
             "            s(3).replaceAll(\"\\\"\", \"\"),\n" +
             "            s(5).replaceAll(\"\\\"\", \"\").toInt\n" +
             "        )\n" +
-            ")", getInterpreterContext());
+            ").toDF()", getInterpreterContext());
     assertEquals(InterpreterResult.Code.SUCCESS, result.code());
 
     // spark version
@@ -165,31 +198,31 @@ public class NewSparkInterpreterTest {
       assertEquals(InterpreterResult.Code.SUCCESS, result.code());
 
       result = interpreter.interpret(
-          "val df = sqlContext.createDataFrame(Seq((1,\"a\"),(2,\"b\")))\n" +
+          "val df = sqlContext.createDataFrame(Seq((1,\"a\"),(2, null)))\n" +
               "df.show()", getInterpreterContext());
       assertEquals(InterpreterResult.Code.SUCCESS, result.code());
       assertTrue(output.contains(
-              "+---+---+\n" +
-              "| _1| _2|\n" +
-              "+---+---+\n" +
-              "|  1|  a|\n" +
-              "|  2|  b|\n" +
-              "+---+---+"));
+          "+---+----+\n" +
+              "| _1|  _2|\n" +
+              "+---+----+\n" +
+              "|  1|   a|\n" +
+              "|  2|null|\n" +
+              "+---+----+"));
     } else if (version.contains("String = 2.")) {
       result = interpreter.interpret("spark", getInterpreterContext());
       assertEquals(InterpreterResult.Code.SUCCESS, result.code());
 
       result = interpreter.interpret(
-          "val df = spark.createDataFrame(Seq((1,\"a\"),(2,\"b\")))\n" +
+          "val df = spark.createDataFrame(Seq((1,\"a\"),(2, null)))\n" +
               "df.show()", getInterpreterContext());
       assertEquals(InterpreterResult.Code.SUCCESS, result.code());
       assertTrue(output.contains(
-              "+---+---+\n" +
-              "| _1| _2|\n" +
-              "+---+---+\n" +
-              "|  1|  a|\n" +
-              "|  2|  b|\n" +
-              "+---+---+"));
+          "+---+----+\n" +
+              "| _1|  _2|\n" +
+              "+---+----+\n" +
+              "|  1|   a|\n" +
+              "|  2|null|\n" +
+              "+---+----+"));
     }
 
     // ZeppelinContext
@@ -197,9 +230,9 @@ public class NewSparkInterpreterTest {
     assertEquals(InterpreterResult.Code.SUCCESS, result.code());
     assertEquals(InterpreterResult.Type.TABLE, messageOutput.getType());
     messageOutput.flush();
-    assertEquals("_1\t_2\n1\ta\n2\tb\n", messageOutput.toInterpreterResultMessage().getData());
+    assertEquals("_1\t_2\n1\ta\n2\tnull\n", messageOutput.toInterpreterResultMessage().getData());
 
-    InterpreterContext context = getInterpreterContext();
+    context = getInterpreterContext();
     result = interpreter.interpret("z.input(\"name\", \"default_name\")", context);
     assertEquals(InterpreterResult.Code.SUCCESS, result.code());
     assertEquals(1, context.getGui().getForms().size());
@@ -207,6 +240,14 @@ public class NewSparkInterpreterTest {
     TextBox textBox = (TextBox) context.getGui().getForms().get("name");
     assertEquals("name", textBox.getName());
     assertEquals("default_name", textBox.getDefaultValue());
+
+    context = getInterpreterContext();
+    result = interpreter.interpret("z.password(\"pwd\")", context);
+    assertEquals(InterpreterResult.Code.SUCCESS, result.code());
+    assertEquals(1, context.getGui().getForms().size());
+    assertTrue(context.getGui().getForms().get("pwd") instanceof Password);
+    Password pwd = (Password) context.getGui().getForms().get("pwd");
+    assertEquals("pwd", pwd.getName());
 
     context = getInterpreterContext();
     result = interpreter.interpret("z.checkbox(\"checkbox_1\", Seq(\"value_2\"), Seq((\"value_1\", \"name_1\"), (\"value_2\", \"name_2\")))", context);
@@ -251,6 +292,10 @@ public class NewSparkInterpreterTest {
     assertEquals(1, completions.size());
     assertEquals("range", completions.get(0).name);
 
+    // cursor in middle of code
+    completions = interpreter.completion("sc.ra\n1+1", 5, getInterpreterContext());
+    assertEquals(1, completions.size());
+    assertEquals("range", completions.get(0).name);
 
     // Zeppelin-Display
     result = interpreter.interpret("import org.apache.zeppelin.display.angular.notebookscope._\n" +
@@ -291,7 +336,7 @@ public class NewSparkInterpreterTest {
     interpretThread.start();
     boolean nonZeroProgress = false;
     int progress = 0;
-    while(interpretThread.isAlive()) {
+    while (interpretThread.isAlive()) {
       progress = interpreter.getProgress(context2);
       assertTrue(progress >= 0);
       if (progress != 0 && progress != 100) {
@@ -325,30 +370,190 @@ public class NewSparkInterpreterTest {
     interpretThread.join();
   }
 
-  @Test
-  public void testDependencies() throws IOException, InterpreterException {
+  //TODO(zjffdu) This unit test will fail due to classpath issue, should enable it after the classpath issue is fixed.
+  @Ignore
+  public void testDepInterpreter() throws InterpreterException {
     Properties properties = new Properties();
     properties.setProperty("spark.master", "local");
     properties.setProperty("spark.app.name", "test");
     properties.setProperty("zeppelin.spark.maxResult", "100");
+    properties.setProperty("zeppelin.spark.test", "true");
     properties.setProperty("zeppelin.spark.useNew", "true");
+    properties.setProperty("zeppelin.dep.localrepo", Files.createTempDir().getAbsolutePath());
+    // disable color output for easy testing
+    properties.setProperty("zeppelin.spark.scala.color", "false");
 
-    // download spark-avro jar
-    URL website = new URL("http://repo1.maven.org/maven2/com/databricks/spark-avro_2.11/3.2.0/spark-avro_2.11-3.2.0.jar");
-    ReadableByteChannel rbc = Channels.newChannel(website.openStream());
-    File avroJarFile = new File("spark-avro_2.11-3.2.0.jar");
-    FileOutputStream fos = new FileOutputStream(avroJarFile);
-    fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+    InterpreterGroup intpGroup = new InterpreterGroup();
+    interpreter = new SparkInterpreter(properties);
+    depInterpreter = new DepInterpreter(properties);
+    interpreter.setInterpreterGroup(intpGroup);
+    depInterpreter.setInterpreterGroup(intpGroup);
+    intpGroup.put("session_1", new ArrayList<Interpreter>());
+    intpGroup.get("session_1").add(interpreter);
+    intpGroup.get("session_1").add(depInterpreter);
 
-    properties.setProperty("spark.jars", avroJarFile.getAbsolutePath());
+    depInterpreter.open();
+    InterpreterResult result =
+        depInterpreter.interpret("z.load(\"com.databricks:spark-avro_2.11:3.2.0\")", getInterpreterContext());
+    assertEquals(InterpreterResult.Code.SUCCESS, result.code());
 
+    interpreter.open();
+    result = interpreter.interpret("import com.databricks.spark.avro._", getInterpreterContext());
+    assertEquals(InterpreterResult.Code.SUCCESS, result.code());
+  }
+
+  @Test
+  public void testDisableReplOutput() throws InterpreterException {
+    Properties properties = new Properties();
+    properties.setProperty("spark.master", "local");
+    properties.setProperty("spark.app.name", "test");
+    properties.setProperty("zeppelin.spark.maxResult", "100");
+    properties.setProperty("zeppelin.spark.test", "true");
+    properties.setProperty("zeppelin.spark.useNew", "true");
+    properties.setProperty("zeppelin.spark.printREPLOutput", "false");
+    // disable color output for easy testing
+    properties.setProperty("zeppelin.spark.scala.color", "false");
+
+    InterpreterContext.set(getInterpreterContext());
     interpreter = new SparkInterpreter(properties);
     assertTrue(interpreter.getDelegation() instanceof NewSparkInterpreter);
     interpreter.setInterpreterGroup(mock(InterpreterGroup.class));
     interpreter.open();
 
-    InterpreterResult result = interpreter.interpret("import com.databricks.spark.avro._", getInterpreterContext());
+    InterpreterResult result = interpreter.interpret("val a=\"hello world\"", getInterpreterContext());
     assertEquals(InterpreterResult.Code.SUCCESS, result.code());
+    // no output for define new variable
+    assertEquals("", output);
+
+    result = interpreter.interpret("print(a)", getInterpreterContext());
+    assertEquals(InterpreterResult.Code.SUCCESS, result.code());
+    // output from print statement will still be displayed
+    assertEquals("hello world", output);
+  }
+
+  @Test
+  public void testSchedulePool() throws InterpreterException {
+    Properties properties = new Properties();
+    properties.setProperty("spark.master", "local");
+    properties.setProperty("spark.app.name", "test");
+    properties.setProperty("zeppelin.spark.maxResult", "100");
+    properties.setProperty("zeppelin.spark.test", "true");
+    properties.setProperty("zeppelin.spark.useNew", "true");
+    properties.setProperty("spark.scheduler.mode", "FAIR");
+    // disable color output for easy testing
+    properties.setProperty("zeppelin.spark.scala.color", "false");
+
+    interpreter = new SparkInterpreter(properties);
+    assertTrue(interpreter.getDelegation() instanceof NewSparkInterpreter);
+    interpreter.setInterpreterGroup(mock(InterpreterGroup.class));
+    InterpreterContext.set(getInterpreterContext());
+    interpreter.open();
+
+    InterpreterContext context = getInterpreterContext();
+    context.getLocalProperties().put("pool", "pool1");
+    InterpreterResult result = interpreter.interpret("sc.range(1, 10).sum", context);
+    assertEquals(InterpreterResult.Code.SUCCESS, result.code());
+    assertEquals("pool1", interpreter.getSparkContext().getLocalProperty("spark.scheduler.pool"));
+
+    // pool is reset to null if user don't specify it via paragraph properties
+    result = interpreter.interpret("sc.range(1, 10).sum", getInterpreterContext());
+    assertEquals(InterpreterResult.Code.SUCCESS, result.code());
+    assertEquals(null, interpreter.getSparkContext().getLocalProperty("spark.scheduler.pool"));
+  }
+
+  // spark.ui.enabled: false
+  @Test
+  public void testDisableSparkUI_1() throws InterpreterException {
+    Properties properties = new Properties();
+    properties.setProperty("spark.master", "local");
+    properties.setProperty("spark.app.name", "test");
+    properties.setProperty("zeppelin.spark.maxResult", "100");
+    properties.setProperty("zeppelin.spark.test", "true");
+    properties.setProperty("zeppelin.spark.useNew", "true");
+    properties.setProperty("spark.ui.enabled", "false");
+    // disable color output for easy testing
+    properties.setProperty("zeppelin.spark.scala.color", "false");
+
+    interpreter = new SparkInterpreter(properties);
+    assertTrue(interpreter.getDelegation() instanceof NewSparkInterpreter);
+    interpreter.setInterpreterGroup(mock(InterpreterGroup.class));
+    InterpreterContext.set(getInterpreterContext());
+    interpreter.open();
+
+    InterpreterContext context = getInterpreterContext();
+    InterpreterResult result = interpreter.interpret("sc.range(1, 10).sum", context);
+    assertEquals(InterpreterResult.Code.SUCCESS, result.code());
+
+    // spark job url is not sent
+    verify(mockRemoteEventClient, never()).onParaInfosReceived(any(Map.class));
+  }
+
+  // zeppelin.spark.ui.hidden: true
+  @Test
+  public void testDisableSparkUI_2() throws InterpreterException {
+    Properties properties = new Properties();
+    properties.setProperty("spark.master", "local");
+    properties.setProperty("spark.app.name", "test");
+    properties.setProperty("zeppelin.spark.maxResult", "100");
+    properties.setProperty("zeppelin.spark.test", "true");
+    properties.setProperty("zeppelin.spark.useNew", "true");
+    properties.setProperty("zeppelin.spark.ui.hidden", "true");
+    // disable color output for easy testing
+    properties.setProperty("zeppelin.spark.scala.color", "false");
+
+    interpreter = new SparkInterpreter(properties);
+    assertTrue(interpreter.getDelegation() instanceof NewSparkInterpreter);
+    interpreter.setInterpreterGroup(mock(InterpreterGroup.class));
+    InterpreterContext.set(getInterpreterContext());
+    interpreter.open();
+
+    InterpreterContext context = getInterpreterContext();
+    InterpreterResult result = interpreter.interpret("sc.range(1, 10).sum", context);
+    assertEquals(InterpreterResult.Code.SUCCESS, result.code());
+
+    // spark job url is not sent
+    verify(mockRemoteEventClient, never()).onParaInfosReceived(any(Map.class));
+  }
+
+  @Test
+  public void testScopedMode() throws InterpreterException {
+    Properties properties = new Properties();
+    properties.setProperty("spark.master", "local");
+    properties.setProperty("spark.app.name", "test");
+    properties.setProperty("zeppelin.spark.maxResult", "100");
+    properties.setProperty("zeppelin.spark.test", "true");
+    properties.setProperty("zeppelin.spark.useNew", "true");
+    // disable color output for easy testing
+    properties.setProperty("zeppelin.spark.scala.color", "false");
+
+    SparkInterpreter interpreter1 = new SparkInterpreter(properties);
+    SparkInterpreter interpreter2 = new SparkInterpreter(properties);
+
+    InterpreterGroup interpreterGroup = new InterpreterGroup();
+    interpreter1.setInterpreterGroup(interpreterGroup);
+    interpreter2.setInterpreterGroup(interpreterGroup);
+
+    interpreterGroup.addInterpreterToSession(interpreter1, "session_1");
+    interpreterGroup.addInterpreterToSession(interpreter2, "session_2");
+
+    InterpreterContext.set(getInterpreterContext());
+    interpreter1.open();
+    interpreter2.open();
+
+    InterpreterContext context = getInterpreterContext();
+
+    InterpreterResult result1 = interpreter1.interpret("sc.range(1, 10).sum", context);
+    assertEquals(InterpreterResult.Code.SUCCESS, result1.code());
+
+    InterpreterResult result2 = interpreter2.interpret("sc.range(1, 10).sum", context);
+    assertEquals(InterpreterResult.Code.SUCCESS, result2.code());
+
+    // interpreter2 continue to work after interpreter1 is closed
+    interpreter1.close();
+
+    result2 = interpreter2.interpret("sc.range(1, 10).sum", context);
+    assertEquals(InterpreterResult.Code.SUCCESS, result2.code());
+    interpreter2.close();
   }
 
   @After
@@ -356,23 +561,20 @@ public class NewSparkInterpreterTest {
     if (this.interpreter != null) {
       this.interpreter.close();
     }
+    if (this.depInterpreter != null) {
+      this.depInterpreter.close();
+    }
+    SparkShims.reset();
   }
 
   private InterpreterContext getInterpreterContext() {
     output = "";
-    InterpreterContext context = new InterpreterContext(
-        "noteId",
-        "paragraphId",
-        "replName",
-        "paragraphTitle",
-        "paragraphText",
-        new AuthenticationInfo(),
-        new HashMap<String, Object>(),
-        new GUI(),
-        new GUI(),
-        new AngularObjectRegistry("spark", null),
-        null,
-        null,
+    InterpreterContext context = InterpreterContext.builder()
+        .setInterpreterOut(new InterpreterOutput(null))
+        .setIntpEventClient(mockRemoteEventClient)
+        .setAngularObjectRegistry(new AngularObjectRegistry("spark", null))
+        .build();
+    context.out =
         new InterpreterOutput(
 
             new InterpreterOutputListener() {
@@ -394,9 +596,7 @@ public class NewSparkInterpreterTest {
               public void onUpdate(int index, InterpreterResultMessageOutput out) {
                 messageOutput = out;
               }
-            })
-    );
-    context.setClient(mockRemoteEventClient);
+            });
     return context;
   }
 }

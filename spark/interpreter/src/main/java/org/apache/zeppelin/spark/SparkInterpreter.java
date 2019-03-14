@@ -20,7 +20,7 @@ package org.apache.zeppelin.spark;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.SQLContext;
-import org.apache.zeppelin.interpreter.Interpreter;
+import org.apache.zeppelin.interpreter.BaseZeppelinContext;
 import org.apache.zeppelin.interpreter.InterpreterContext;
 import org.apache.zeppelin.interpreter.InterpreterException;
 import org.apache.zeppelin.interpreter.InterpreterResult;
@@ -45,11 +45,16 @@ public class SparkInterpreter extends AbstractSparkInterpreter {
 
   public SparkInterpreter(Properties properties) {
     super(properties);
+    // set scala.color
+    if (Boolean.parseBoolean(properties.getProperty("zeppelin.spark.scala.color", "true"))) {
+      System.setProperty("scala.color", "true");
+    }
     if (Boolean.parseBoolean(properties.getProperty("zeppelin.spark.useNew", "false"))) {
       delegation = new NewSparkInterpreter(properties);
     } else {
       delegation = new OldSparkInterpreter(properties);
     }
+    delegation.setParentSparkInterpreter(this);
   }
 
   @Override
@@ -67,7 +72,7 @@ public class SparkInterpreter extends AbstractSparkInterpreter {
   }
 
   @Override
-  public InterpreterResult interpret(String st, InterpreterContext context)
+  public InterpreterResult internalInterpret(String st, InterpreterContext context)
       throws InterpreterException {
     return delegation.interpret(st, context);
   }
@@ -131,12 +136,7 @@ public class SparkInterpreter extends AbstractSparkInterpreter {
   }
 
   @Override
-  public void populateSparkWebUrl(InterpreterContext ctx) {
-    delegation.populateSparkWebUrl(ctx);
-  }
-
-  @Override
-  public SparkZeppelinContext getZeppelinContext() {
+  public BaseZeppelinContext getZeppelinContext() {
     return delegation.getZeppelinContext();
   }
 

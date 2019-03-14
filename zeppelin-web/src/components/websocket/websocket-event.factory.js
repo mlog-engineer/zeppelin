@@ -14,7 +14,7 @@
 
 angular.module('zeppelinWebApp').factory('websocketEvents', WebsocketEventFactory);
 
-function WebsocketEventFactory($rootScope, $websocket, $location, baseUrlSrv) {
+function WebsocketEventFactory($rootScope, $websocket, $location, baseUrlSrv, ngToast) {
   'ngInject';
 
   let websocketCalls = {};
@@ -65,6 +65,8 @@ function WebsocketEventFactory($rootScope, $websocket, $location, baseUrlSrv) {
       $location.path('/notebook/' + data.note.id);
     } else if (op === 'NOTES_INFO') {
       $rootScope.$broadcast('setNoteMenu', data.notes);
+    } else if (op === 'NOTE_RUNNING_STATUS') {
+      $rootScope.$broadcast('noteRunningStatus', data.status);
     } else if (op === 'LIST_NOTE_JOBS') {
       $rootScope.$emit('jobmanager:set-jobs', data.noteJobs);
     } else if (op === 'LIST_UPDATE_NOTE_JOBS') {
@@ -110,6 +112,10 @@ function WebsocketEventFactory($rootScope, $websocket, $location, baseUrlSrv) {
       });
     } else if (op === 'PARAGRAPH') {
       $rootScope.$broadcast('updateParagraph', data);
+    } else if (op === 'PATCH_PARAGRAPH') {
+      $rootScope.$broadcast('patchReceived', data);
+    } else if (op === 'COLLABORATIVE_MODE_STATUS') {
+      $rootScope.$broadcast('collaborativeModeStatus', data);
     } else if (op === 'RUN_PARAGRAPH_USING_SPELL') {
       $rootScope.$broadcast('runParagraphUsingSpell', data);
     } else if (op === 'PARAGRAPH_APPEND_OUTPUT') {
@@ -177,6 +183,12 @@ function WebsocketEventFactory($rootScope, $websocket, $location, baseUrlSrv) {
       $rootScope.$broadcast('setNoteRevisionResult', data);
     } else if (op === 'PARAS_INFO') {
       $rootScope.$broadcast('updateParaInfos', data);
+    } else if (op === 'INTERPRETER_INSTALL_STARTED') {
+      ngToast.info(data.message);
+    } else if (op === 'INTERPRETER_INSTALL_RESULT') {
+      ngToast.info(data.message);
+    } else if (op === 'NOTICE') {
+      ngToast.info(data.notice);
     } else {
       console.error(`unknown websocket op: ${op}`);
     }

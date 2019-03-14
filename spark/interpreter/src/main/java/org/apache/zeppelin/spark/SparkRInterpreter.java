@@ -17,28 +17,29 @@
 
 package org.apache.zeppelin.spark;
 
-import static org.apache.zeppelin.spark.ZeppelinRDisplay.render;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.spark.SparkContext;
 import org.apache.spark.SparkRBackend;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.zeppelin.interpreter.*;
+import org.apache.zeppelin.interpreter.Interpreter;
+import org.apache.zeppelin.interpreter.InterpreterContext;
+import org.apache.zeppelin.interpreter.InterpreterException;
+import org.apache.zeppelin.interpreter.InterpreterResult;
 import org.apache.zeppelin.interpreter.thrift.InterpreterCompletion;
-import org.apache.zeppelin.interpreter.util.InterpreterOutputStream;
 import org.apache.zeppelin.scheduler.Scheduler;
 import org.apache.zeppelin.scheduler.SchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.apache.zeppelin.spark.ZeppelinRDisplay.render;
 
 /**
  * R and SparkR interpreter with visualization support.
@@ -53,6 +54,7 @@ public class SparkRInterpreter extends Interpreter {
   private AtomicBoolean rbackendDead = new AtomicBoolean(false);
   private SparkContext sc;
   private JavaSparkContext jsc;
+  private String secret;
 
   public SparkRInterpreter(Properties property) {
     super(property);
@@ -75,20 +77,21 @@ public class SparkRInterpreter extends Interpreter {
       // yarn-cluster mode
       sparkRLibPath = "sparkr";
     }
+    if (!new File(sparkRLibPath).exists()) {
+      throw new InterpreterException(String.format("sparkRLib %s doesn't exist", sparkRLibPath));
+    }
 
+    this.sparkInterpreter = getInterpreterInTheSameSessionByClassName(SparkInterpreter.class);
+    this.sc = sparkInterpreter.getSparkContext();
+    this.jsc = sparkInterpreter.getJavaSparkContext();
     // Share the same SparkRBackend across sessions
+    SparkVersion sparkVersion = new SparkVersion(sc.version());
     synchronized (SparkRBackend.backend()) {
       if (!SparkRBackend.isStarted()) {
-        SparkRBackend.init();
+        SparkRBackend.init(sparkVersion);
         SparkRBackend.start();
       }
     }
-
-    int port = SparkRBackend.port();
-    this.sparkInterpreter = getSparkInterpreter();
-    this.sc = sparkInterpreter.getSparkContext();
-    this.jsc = sparkInterpreter.getJavaSparkContext();
-    SparkVersion sparkVersion = new SparkVersion(sc.version());
     this.isSpark2 = sparkVersion.newerThanEquals(SparkVersion.SPARK_2_0_0);
     int timeout = this.sc.getConf().getInt("spark.r.backendConnectionTimeout", 6000);
 
@@ -98,9 +101,9 @@ public class SparkRInterpreter extends Interpreter {
       ZeppelinRContext.setSparkSession(sparkInterpreter.getSparkSession());
     }
     ZeppelinRContext.setSqlContext(sparkInterpreter.getSQLContext());
-    ZeppelinRContext.setZeppelinContext(sparkInterpreter.getZeppelinContext());
+    ZeppelinRContext.setZeppelinContext((SparkZeppelinContext) sparkInterpreter.getZeppelinContext());
 
-    zeppelinR = new ZeppelinR(rCmdPath, sparkRLibPath, port, sparkVersion, timeout, this);
+    zeppelinR = new ZeppelinR(rCmdPath, sparkRLibPath, SparkRBackend.port(), sparkVersion, timeout, this);
     try {
       zeppelinR.open();
     } catch (IOException e) {
@@ -119,29 +122,13 @@ public class SparkRInterpreter extends Interpreter {
   public InterpreterResult interpret(String lines, InterpreterContext interpreterContext)
       throws InterpreterException {
 
-    sparkInterpreter.populateSparkWebUrl(interpreterContext);
     String jobGroup = Utils.buildJobGroupId(interpreterContext);
-    String jobDesc = "Started by: " +
-       Utils.getUserName(interpreterContext.getAuthenticationInfo());
+    String jobDesc = Utils.buildJobDesc(interpreterContext);
     sparkInterpreter.getSparkContext().setJobGroup(jobGroup, jobDesc, false);
 
     String imageWidth = getProperty("zeppelin.R.image.width", "100%");
-
-    String[] sl = lines.split("\n");
-    if (sl[0].contains("{") && sl[0].contains("}")) {
-      String jsonConfig = sl[0].substring(sl[0].indexOf("{"), sl[0].indexOf("}") + 1);
-      ObjectMapper m = new ObjectMapper();
-      try {
-        JsonNode rootNode = m.readTree(jsonConfig);
-        JsonNode imageWidthNode = rootNode.path("imageWidth");
-        if (!imageWidthNode.isMissingNode()) imageWidth = imageWidthNode.textValue();
-      }
-      catch (Exception e) {
-        logger.warn("Can not parse json config: " + jsonConfig, e);
-      }
-      finally {
-        lines = lines.replace(jsonConfig, "");
-      }
+    if (interpreterContext.getLocalProperties().containsKey("imageWidth")) {
+      imageWidth = interpreterContext.getLocalProperties().get("imageWidth");
     }
 
     String setJobGroup = "";
@@ -149,12 +136,20 @@ public class SparkRInterpreter extends Interpreter {
     if (isSpark2) {
       setJobGroup = "dummy__ <- setJobGroup(\"" + jobGroup +
           "\", \" +" + jobDesc + "\", TRUE)";
-    } else if (getSparkInterpreter().getSparkVersion().newerThanEquals(SparkVersion.SPARK_1_5_0)) {
+    } else {
       setJobGroup = "dummy__ <- setJobGroup(sc, \"" + jobGroup +
           "\", \"" + jobDesc + "\", TRUE)";
     }
     lines = setJobGroup + "\n" + lines;
-
+    if (sparkInterpreter.getSparkVersion().newerThanEquals(SparkVersion.SPARK_2_3_0)) {
+      // setLocalProperty is only available from spark 2.3.0
+      String setPoolStmt = "setLocalProperty('spark.scheduler.pool', NULL)";
+      if (interpreterContext.getLocalProperties().containsKey("pool")) {
+        setPoolStmt = "setLocalProperty('spark.scheduler.pool', '" +
+            interpreterContext.getLocalProperties().get("pool") + "')";
+      }
+      lines = setPoolStmt + "\n" + lines;
+    }
     try {
       // render output with knitr
       if (rbackendDead.get()) {
@@ -222,25 +217,6 @@ public class SparkRInterpreter extends Interpreter {
   public List<InterpreterCompletion> completion(String buf, int cursor,
                                                 InterpreterContext interpreterContext) {
     return new ArrayList<>();
-  }
-
-  private SparkInterpreter getSparkInterpreter() throws InterpreterException {
-    LazyOpenInterpreter lazy = null;
-    SparkInterpreter spark = null;
-    Interpreter p = getInterpreterInTheSameSessionByClassName(SparkInterpreter.class.getName());
-
-    while (p instanceof WrappedInterpreter) {
-      if (p instanceof LazyOpenInterpreter) {
-        lazy = (LazyOpenInterpreter) p;
-      }
-      p = ((WrappedInterpreter) p).getInnerInterpreter();
-    }
-    spark = (SparkInterpreter) p;
-
-    if (lazy != null) {
-      lazy.open();
-    }
-    return spark;
   }
 
   private boolean useKnitr() {

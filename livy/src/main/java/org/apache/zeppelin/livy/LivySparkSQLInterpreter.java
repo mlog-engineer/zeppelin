@@ -18,23 +18,26 @@
 package org.apache.zeppelin.livy;
 
 import org.apache.commons.lang.StringUtils;
-import static org.apache.commons.lang.StringEscapeUtils.escapeJavaScript;
-import org.apache.zeppelin.display.GUI;
-import org.apache.zeppelin.interpreter.*;
+import org.apache.zeppelin.interpreter.InterpreterContext;
+import org.apache.zeppelin.interpreter.InterpreterException;
+import org.apache.zeppelin.interpreter.InterpreterOutput;
+import org.apache.zeppelin.interpreter.InterpreterResult;
+import org.apache.zeppelin.interpreter.InterpreterResultMessage;
+import org.apache.zeppelin.interpreter.InterpreterUtils;
+import org.apache.zeppelin.interpreter.ResultMessages;
 import org.apache.zeppelin.scheduler.Scheduler;
 import org.apache.zeppelin.scheduler.SchedulerFactory;
-import org.apache.zeppelin.user.AuthenticationInfo;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
+
+import static org.apache.commons.lang.StringEscapeUtils.escapeJavaScript;
 
 /**
  * Livy SparkSQL Interpreter for Zeppelin.
  */
 public class LivySparkSQLInterpreter extends BaseLivyInterpreter {
-
   public static final String ZEPPELIN_LIVY_SPARK_SQL_FIELD_TRUNCATE =
       "zeppelin.livy.spark.sql.field.truncate";
 
@@ -64,24 +67,13 @@ public class LivySparkSQLInterpreter extends BaseLivyInterpreter {
 
   @Override
   public void open() throws InterpreterException {
-    this.sparkInterpreter = getSparkInterpreter();
+    this.sparkInterpreter = getInterpreterInTheSameSessionByClassName(LivySparkInterpreter.class);
     // As we don't know whether livyserver use spark2 or spark1, so we will detect SparkSession
     // to judge whether it is using spark2.
     try {
-      InterpreterContext context = new InterpreterContext(
-          "noteId",
-          "paragraphId",
-          "replName",
-          "paragraphTitle",
-          "paragraphText",
-          new AuthenticationInfo(),
-          new HashMap<String, Object>(),
-          new GUI(),
-          new GUI(),
-          null,
-          null,
-          null,
-          new InterpreterOutput(null));
+      InterpreterContext context = InterpreterContext.builder()
+          .setInterpreterOut(new InterpreterOutput(null))
+          .build();
       InterpreterResult result = sparkInterpreter.interpret("spark", context);
       if (result.code() == InterpreterResult.Code.SUCCESS &&
           result.message().get(0).getData().contains("org.apache.spark.sql.SparkSession")) {
@@ -109,25 +101,6 @@ public class LivySparkSQLInterpreter extends BaseLivyInterpreter {
     } catch (LivyException e) {
       throw new RuntimeException("Fail to Detect SparkVersion", e);
     }
-  }
-
-  private LivySparkInterpreter getSparkInterpreter() throws InterpreterException {
-    LazyOpenInterpreter lazy = null;
-    LivySparkInterpreter spark = null;
-    Interpreter p = getInterpreterInTheSameSessionByClassName(LivySparkInterpreter.class.getName());
-
-    while (p instanceof WrappedInterpreter) {
-      if (p instanceof LazyOpenInterpreter) {
-        lazy = (LazyOpenInterpreter) p;
-      }
-      p = ((WrappedInterpreter) p).getInnerInterpreter();
-    }
-    spark = (LivySparkInterpreter) p;
-
-    if (lazy != null) {
-      lazy.open();
-    }
-    return spark;
   }
 
   @Override
@@ -230,12 +203,13 @@ public class LivySparkSQLInterpreter extends BaseLivyInterpreter {
   }
 
   /**
-   * Represent the start and end index of each cell
+   * Represent the start and end index of each cell.
    */
   private static class Pair {
     private int start;
     private int end;
-    public Pair(int start, int end) {
+
+    Pair(int start, int end) {
       this.start = start;
       this.end = end;
     }
@@ -252,10 +226,8 @@ public class LivySparkSQLInterpreter extends BaseLivyInterpreter {
       return SchedulerFactory.singleton().createOrGetParallelScheduler(
           LivySparkInterpreter.class.getName() + this.hashCode(), maxConcurrency);
     } else {
-      Interpreter intp =
-          getInterpreterInTheSameSessionByClassName(LivySparkInterpreter.class.getName());
-      if (intp != null) {
-        return intp.getScheduler();
+      if (sparkInterpreter != null) {
+        return sparkInterpreter.getScheduler();
       } else {
         return null;
       }

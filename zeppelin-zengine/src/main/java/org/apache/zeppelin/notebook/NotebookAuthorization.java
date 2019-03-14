@@ -17,13 +17,7 @@
 
 package org.apache.zeppelin.notebook;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -35,6 +29,7 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.conf.ZeppelinConfiguration.ConfVars;
+import org.apache.zeppelin.scheduler.Job;
 import org.apache.zeppelin.storage.ConfigStorage;
 import org.apache.zeppelin.user.AuthenticationInfo;
 import org.slf4j.Logger;
@@ -43,13 +38,11 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Sets;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 /**
  * Contains authorization information for notes
  */
-public class NotebookAuthorization {
+public class NotebookAuthorization implements NoteEventListener {
   private static final Logger LOG = LoggerFactory.getLogger(NotebookAuthorization.class);
   private static NotebookAuthorization instance = null;
   /*
@@ -205,6 +198,21 @@ public class NotebookAuthorization {
     saveToFile();
   }
 
+  /*
+  * If case conversion is enforced, then change entity names to lower case
+  */
+  private Set<String> checkCaseAndConvert(Set<String> entities) {
+    if (conf.isUsernameForceLowerCase()) {
+      Set<String> set2 = new HashSet<String>();
+      for (String name : entities) {
+        set2.add(name.toLowerCase());
+      }
+      return set2;
+    } else {
+      return entities;
+    }
+  }
+
   public Set<String> getOwners(String noteId) {
     Map<String, Set<String>> noteAuthInfo = authInfo.get(noteId);
     Set<String> entities = null;
@@ -214,6 +222,8 @@ public class NotebookAuthorization {
       entities = noteAuthInfo.get("owners");
       if (entities == null) {
         entities = new HashSet<>();
+      } else {
+        entities = checkCaseAndConvert(entities);
       }
     }
     return entities;
@@ -228,6 +238,8 @@ public class NotebookAuthorization {
       entities = noteAuthInfo.get("readers");
       if (entities == null) {
         entities = new HashSet<>();
+      } else {
+        entities = checkCaseAndConvert(entities);
       }
     }
     return entities;
@@ -242,6 +254,8 @@ public class NotebookAuthorization {
       entities = noteAuthInfo.get("runners");
       if (entities == null) {
         entities = new HashSet<>();
+      } else {
+        entities = checkCaseAndConvert(entities);
       }
     }
     return entities;
@@ -256,6 +270,8 @@ public class NotebookAuthorization {
       entities = noteAuthInfo.get("writers");
       if (entities == null) {
         entities = new HashSet<>();
+      } else {
+        entities = checkCaseAndConvert(entities);
       }
     }
     return entities;
@@ -386,5 +402,40 @@ public class NotebookAuthorization {
         setWriters(noteId, entities);
       }
     }
+  }
+
+  @Override
+  public void onNoteCreate(Note note, AuthenticationInfo subject) {
+    setNewNotePermissions(note.getId(), subject);
+  }
+
+  @Override
+  public void onNoteRemove(Note note, AuthenticationInfo subject) {
+    removeNote(note.getId());
+  }
+
+  @Override
+  public void onNoteUpdate(Note note, AuthenticationInfo subject) {
+
+  }
+
+  @Override
+  public void onParagraphRemove(Paragraph p) {
+
+  }
+
+  @Override
+  public void onParagraphCreate(Paragraph p) {
+
+  }
+
+  @Override
+  public void onParagraphUpdate(Paragraph p) throws IOException {
+
+  }
+
+  @Override
+  public void onParagraphStatusChange(Paragraph p, Job.Status status) {
+
   }
 }

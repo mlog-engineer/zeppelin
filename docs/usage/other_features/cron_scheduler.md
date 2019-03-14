@@ -41,11 +41,11 @@ You can set a cron schedule easily by clicking each option such as `1m` and `5m`
 
 You can set the cron schedule by filling in this form. Please see [Cron Trigger Tutorial](http://www.quartz-scheduler.org/documentation/quartz-2.2.x/tutorials/crontrigger) for the available cron syntax.
 
-### Cron executing user
+### Cron executing user (It is removed from 0.8 where it enforces the cron execution user to be the note owner for security purpose)
 
 You can set the cron executing user by filling in this form and press the enter key.
 
-### auto-restart interpreter on cron execution
+### After execution stop the interpreter
 
 When this checkbox is set to "on", the interpreters which are binded to the notebook are stopped automatically after the cron execution. This feature is useful if you want to release the interpreter resources after the cron execution.
 

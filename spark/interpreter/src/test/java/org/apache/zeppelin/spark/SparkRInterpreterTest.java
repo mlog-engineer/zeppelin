@@ -17,18 +17,17 @@
 
 package org.apache.zeppelin.spark;
 
-import org.apache.zeppelin.display.AngularObjectRegistry;
-import org.apache.zeppelin.display.GUI;
 import org.apache.zeppelin.interpreter.InterpreterContext;
 import org.apache.zeppelin.interpreter.InterpreterException;
 import org.apache.zeppelin.interpreter.InterpreterGroup;
+import org.apache.zeppelin.interpreter.InterpreterOutput;
 import org.apache.zeppelin.interpreter.InterpreterResult;
 import org.apache.zeppelin.interpreter.LazyOpenInterpreter;
-import org.apache.zeppelin.interpreter.remote.RemoteEventClient;
-import org.apache.zeppelin.user.AuthenticationInfo;
+import org.apache.zeppelin.interpreter.remote.RemoteInterpreterEventClient;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -45,10 +44,10 @@ public class SparkRInterpreterTest {
 
   private SparkRInterpreter sparkRInterpreter;
   private SparkInterpreter sparkInterpreter;
-  private RemoteEventClient mockRemoteEventClient = mock(RemoteEventClient.class);
+  private RemoteInterpreterEventClient mockRemoteIntpEventClient = mock(RemoteInterpreterEventClient.class);
 
-  @Test
-  public void testSparkRInterpreter() throws InterpreterException, InterruptedException {
+  @Before
+  public void setUp() throws InterpreterException {
     Properties properties = new Properties();
     properties.setProperty("spark.master", "local");
     properties.setProperty("spark.app.name", "test");
@@ -58,6 +57,8 @@ public class SparkRInterpreterTest {
     properties.setProperty("zeppelin.R.knitr", "true");
     properties.setProperty("spark.r.backendConnectionTimeout", "10");
 
+    InterpreterContext context = getInterpreterContext();
+    InterpreterContext.set(context);
     sparkRInterpreter = new SparkRInterpreter(properties);
     sparkInterpreter = new SparkInterpreter(properties);
 
@@ -68,13 +69,20 @@ public class SparkRInterpreterTest {
     sparkInterpreter.setInterpreterGroup(interpreterGroup);
 
     sparkRInterpreter.open();
-    sparkInterpreter.getZeppelinContext().setEventClient(mockRemoteEventClient);
+  }
+
+  @After
+  public void tearDown() throws InterpreterException {
+    sparkInterpreter.close();
+  }
+
+  @Test
+  public void testSparkRInterpreter() throws InterpreterException, InterruptedException {
+
 
     InterpreterResult result = sparkRInterpreter.interpret("1+1", getInterpreterContext());
     assertEquals(InterpreterResult.Code.SUCCESS, result.code());
     assertTrue(result.message().get(0).getData().contains("2"));
-    // spark web url is sent
-    verify(mockRemoteEventClient).onMetaInfosReceived(any(Map.class));
 
     result = sparkRInterpreter.interpret("sparkR.version()", getInterpreterContext());
     assertEquals(InterpreterResult.Code.SUCCESS, result.code());
@@ -84,7 +92,7 @@ public class SparkRInterpreterTest {
       assertEquals(InterpreterResult.Code.SUCCESS, result.code());
       assertTrue(result.message().get(0).getData().contains("eruptions waiting"));
       // spark job url is sent
-      verify(mockRemoteEventClient, atLeastOnce()).onParaInfosReceived(any(String.class), any(String.class), any(Map.class));
+      verify(mockRemoteIntpEventClient, atLeastOnce()).onParaInfosReceived(any(Map.class));
 
       // cancel
       final InterpreterContext context = getInterpreterContext();
@@ -115,15 +123,18 @@ public class SparkRInterpreterTest {
       assertEquals(InterpreterResult.Code.SUCCESS, result.code());
       assertTrue(result.message().get(0).getData().contains("eruptions waiting"));
       // spark job url is sent
-      verify(mockRemoteEventClient, atLeastOnce()).onParaInfosReceived(any(String.class), any(String.class), any(Map.class));
+      verify(mockRemoteIntpEventClient, atLeastOnce()).onParaInfosReceived(any(Map.class));
     }
 
     // plotting
-    result = sparkRInterpreter.interpret("hist(mtcars$mpg)", getInterpreterContext());
+    InterpreterContext context = getInterpreterContext();
+    context.getLocalProperties().put("imageWidth", "100");
+    result = sparkRInterpreter.interpret("hist(mtcars$mpg)", context);
     assertEquals(InterpreterResult.Code.SUCCESS, result.code());
     assertEquals(1, result.message().size());
     assertEquals(InterpreterResult.Type.HTML, result.message().get(0).getType());
     assertTrue(result.message().get(0).getData().contains("<img src="));
+    assertTrue(result.message().get(0).getData().contains("width=\"100\""));
 
     result = sparkRInterpreter.interpret("library(ggplot2)\n" +
         "ggplot(diamonds, aes(x=carat, y=price, color=cut)) + geom_point()", getInterpreterContext());
@@ -143,8 +154,11 @@ public class SparkRInterpreterTest {
     InterpreterContext context = InterpreterContext.builder()
         .setNoteId("note_1")
         .setParagraphId("paragraph_1")
-        .setEventClient(mockRemoteEventClient)
+        .setIntpEventClient(mockRemoteIntpEventClient)
+        .setInterpreterOut(new InterpreterOutput(null))
+        .setLocalProperties(new HashMap<>())
         .build();
     return context;
   }
 }
+

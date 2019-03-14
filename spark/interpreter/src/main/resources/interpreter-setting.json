@@ -78,8 +78,22 @@
       "zeppelin.spark.useNew": {
         "envName": null,
         "propertyName": "zeppelin.spark.useNew",
-        "defaultValue": "false",
+        "defaultValue": true,
         "description": "Whether use new spark interpreter implementation",
+        "type": "checkbox"
+      },
+      "zeppelin.spark.ui.hidden": {
+        "envName": null,
+        "propertyName": "zeppelin.spark.ui.hidden",
+        "defaultValue": false,
+        "description": "Whether to hide spark ui in zeppelin ui",
+        "type": "checkbox"
+      },
+      "zeppelin.spark.scala.color": {
+        "envName": null,
+        "propertyName": "zeppelin.spark.scala.color",
+        "defaultValue": true,
+        "description": "Whether to enable color output of spark scala interpreter",
         "type": "checkbox"
       }
     },
@@ -101,6 +115,13 @@
         "defaultValue": false,
         "description": "Execute multiple SQL concurrently if set true.",
         "type": "checkbox"
+      },
+      "zeppelin.spark.concurrentSQL.max": {
+        "envName": "ZEPPELIN_SPARK_CONCURRENTSQL_MAX",
+        "propertyName": "zeppelin.spark.concurrentSQL.max",
+        "defaultValue": 10,
+        "description": "Max number of SQL concurrently executed",
+        "type": "number"
       },
       "zeppelin.spark.sql.stacktrace": {
         "envName": "ZEPPELIN_SPARK_SQL_STACKTRACE",
@@ -170,9 +191,16 @@
     "name": "pyspark",
     "className": "org.apache.zeppelin.spark.PySparkInterpreter",
     "properties": {
-      "zeppelin.pyspark.python": {
+      "PYSPARK_PYTHON": {
         "envName": "PYSPARK_PYTHON",
-        "propertyName": null,
+        "propertyName": "PYSPARK_PYTHON",
+        "defaultValue": "python",
+        "description": "Python command to run pyspark with",
+        "type": "string"
+      },
+      "PYSPARK_DRIVER_PYTHON": {
+        "envName": "PYSPARK_DRIVER_PYTHON",
+        "propertyName": "PYSPARK_DRIVER_PYTHON",
         "defaultValue": "python",
         "description": "Python command to run pyspark with",
         "type": "string"

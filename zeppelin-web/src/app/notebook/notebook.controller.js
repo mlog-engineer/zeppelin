@@ -35,7 +35,10 @@ function NotebookCtrl($scope, $route, $routeParams, $location, $rootScope,
   $scope.viewOnly = false;
   $scope.showSetting = false;
   $scope.showRevisionsComparator = false;
+  $scope.collaborativeMode = false;
+  $scope.collaborativeModeUsers = [];
   $scope.looknfeelOption = ['default', 'simple', 'report'];
+  $scope.noteFormTitle = null;
   $scope.cronOption = [
     {name: 'None', value: undefined},
     {name: '1m', value: '0 0/1 * * * ?'},
@@ -99,6 +102,27 @@ function NotebookCtrl($scope, $route, $routeParams, $location, $rootScope,
     }
     connectedOnce = true;
   });
+
+  $scope.addEvent = function(config) {
+    let removeEventByID = function(id) {
+      let events = jQuery._data(config.element, 'events')[config.eventType];
+      if (!events) {
+        return;
+      }
+      for (let i=0; i < events.length; i++) {
+        if (events[i].data && events[i].data.eventID === id) {
+          events.splice(i, 1);
+          i--;
+        }
+      }
+    };
+
+    removeEventByID(config.eventID);
+    angular.element(config.element).bind(config.eventType, {eventID: config.eventID}, config.handler);
+    angular.element(config.onDestroyElement).scope().$on('$destroy', () => {
+      removeEventByID(config.eventID);
+    });
+  };
 
   $scope.getCronOptionNameFromValue = function(value) {
     if (!value) {
@@ -217,9 +241,29 @@ function NotebookCtrl($scope, $route, $routeParams, $location, $rootScope,
   };
 
   // Export notebook
+  let limit = 0;
+
+  websocketMsgSrv.listConfigurations();
+  $scope.$on('configurationsInfo', function(scope, event) {
+    limit = event.configurations['zeppelin.websocket.max.text.message.size'];
+  });
+
   $scope.exportNote = function() {
     let jsonContent = JSON.stringify($scope.note);
-    saveAsService.saveAs(jsonContent, $scope.note.name, 'json');
+    if (jsonContent.length > limit) {
+      BootstrapDialog.confirm({
+        closable: true,
+        title: 'Note size exceeds importable limit (' + limit + ')',
+        message: 'Do you still want to export this note?',
+        callback: function(result) {
+          if (result) {
+            saveAsService.saveAs(jsonContent, $scope.note.name, 'json');
+          }
+        },
+      });
+    } else {
+      saveAsService.saveAs(jsonContent, $scope.note.name, 'json');
+    }
   };
 
   // Clone note
@@ -260,7 +304,7 @@ function NotebookCtrl($scope, $route, $routeParams, $location, $rootScope,
       message: 'Set notebook head to current revision?',
       callback: function(result) {
         if (result) {
-          websocketMsgSrv.setNoteRevision($routeParams.noteId, $routeParams.revisionId);
+          websocketMsgSrv.setNoteRevision($routeParams.noteId, $routeParams.name, $routeParams.revisionId);
         }
       },
     });
@@ -441,22 +485,25 @@ function NotebookCtrl($scope, $route, $routeParams, $location, $rootScope,
     }
   };
 
+  $scope.setNoteFormTitle = function(noteFormTitle) {
+    $scope.note.config.noteFormTitle = noteFormTitle;
+    $scope.setConfig();
+  };
+
   /** Set cron expression for this note **/
   $scope.setCronScheduler = function(cronExpr) {
     if (cronExpr) {
       if (!$scope.note.config.cronExecutingUser) {
         $scope.note.config.cronExecutingUser = $rootScope.ticket.principal;
       }
+      if (!$scope.note.config.cronExecutingRoles) {
+        $scope.note.config.cronExecutingRoles = $rootScope.ticket.roles;
+      }
     } else {
       $scope.note.config.cronExecutingUser = '';
+      $scope.note.config.cronExecutingRoles = '';
     }
     $scope.note.config.cron = cronExpr;
-    $scope.setConfig();
-  };
-
-  /** Set the username of the user to be used to execute all notes in notebook **/
-  $scope.setCronExecutingUser = function(cronExecutingUser) {
-    $scope.note.config.cronExecutingUser = cronExecutingUser;
     $scope.setConfig();
   };
 
@@ -479,7 +526,7 @@ function NotebookCtrl($scope, $route, $routeParams, $location, $rootScope,
     const trimmedNewName = newName.trim();
     if (trimmedNewName.length > 0 && $scope.note.name !== trimmedNewName) {
       $scope.note.name = trimmedNewName;
-      websocketMsgSrv.renameNote($scope.note.id, $scope.note.name);
+      websocketMsgSrv.renameNote($scope.note.id, $scope.note.name, true);
     }
   };
 
@@ -1177,11 +1224,11 @@ function NotebookCtrl($scope, $route, $routeParams, $location, $rootScope,
   };
 
   const isSettingDirty = function() {
-    if (angular.equals($scope.interpreterBindings, $scope.interpreterBindingsOrig)) {
-      return false;
-    } else {
-      return true;
-    }
+    // if (angular.equals($scope.interpreterBindings, $scope.interpreterBindingsOrig)) {
+    //   return false;
+    // } else {
+    return false;
+    // }
   };
 
   const isPermissionsDirty = function() {
@@ -1253,6 +1300,16 @@ function NotebookCtrl($scope, $route, $routeParams, $location, $rootScope,
     $scope.saveCursorPosition(paragraph);
   });
 
+  $scope.$on('collaborativeModeStatus', function(event, data) {
+    $scope.collaborativeMode = Boolean(data.status);
+    $scope.collaborativeModeUsers = data.users;
+  });
+
+  $scope.$on('patchReceived', function(event, data) {
+    $scope.collaborativeMode = true;
+  });
+
+
   $scope.$on('runAllBelowAndCurrent', function(event, paragraph, isNeedConfirm) {
     let allParagraphs = $scope.note.paragraphs;
     let toRunParagraphs = [];
@@ -1303,13 +1360,6 @@ function NotebookCtrl($scope, $route, $routeParams, $location, $rootScope,
     let row = angParagEditor.selection.lead.row;
     $scope.$broadcast('focusParagraph', paragraph.id, row + 1, col);
   };
-
-  $scope.$on('setConnectedStatus', function(event, param) {
-    if (connectedOnce && param) {
-      initNotebook();
-    }
-    connectedOnce = true;
-  });
 
   $scope.$on('moveParagraphUp', function(event, paragraph) {
     let newIndex = -1;
@@ -1500,7 +1550,7 @@ function NotebookCtrl($scope, $route, $routeParams, $location, $rootScope,
   });
 
   $scope.isShowNoteForms = function() {
-    if ($scope.note && !angular.equals({}, $scope.note.noteForms)) {
+    if ($scope.note && !_.isEmpty($scope.note.noteForms) && !$scope.paragraphUrl) {
       return true;
     }
     return false;
@@ -1528,8 +1578,17 @@ function NotebookCtrl($scope, $route, $routeParams, $location, $rootScope,
     document.removeEventListener('keydown', $scope.keyboardShortcut);
   });
 
-  angular.element(window).bind('resize', function() {
-    const actionbarHeight = document.getElementById('actionbar').lastElementChild.clientHeight;
-    angular.element(document.getElementById('content')).css('padding-top', actionbarHeight - 20);
-  });
+  let content = document.getElementById('content');
+  if (content && content.id) {
+    $scope.addEvent({
+      eventID: content.id,
+      eventType: 'resize',
+      element: window,
+      onDestroyElement: content,
+      handler: () => {
+        const actionbarHeight = document.getElementById('actionbar').lastElementChild.clientHeight;
+        angular.element(document.getElementById('content')).css('padding-top', actionbarHeight - 20);
+      },
+    });
+  }
 }

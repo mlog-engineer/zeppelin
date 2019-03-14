@@ -74,6 +74,7 @@ limitations under the License.
   * [Personalized Mode](./usage/other_features/personalized_mode.html) 
   * [Customizing Zeppelin Homepage](./usage/other_features/customizing_homepage.html) with one of your notebooks
   * [Notebook actions](./usage/other_features/notebook_actions.html)
+  * [Zeppelin-Context](./usage/other_features/zeppelin_context.html)
 * REST API: available REST API list in Apache Zeppelin
   * [Interpreter API](./usage/rest_api/interpreter.html)
   * [Zeppelin Server API](./usage/rest_api/zeppelin_server.html)
@@ -133,7 +134,7 @@ limitations under the License.
   * [BigQuery](./interpreter/bigquery.html)
   * [Cassandra](./interpreter/cassandra.html)
   * [Elasticsearch](./interpreter/elasticsearch.html)
-  * [flink](./interpreter/flink.html)
+  * [Flink](./interpreter/flink.html)
   * [Geode](./interpreter/geode.html)
   * [Groovy](./interpreter/groovy.html)
   * [HBase](./interpreter/hbase.html)
@@ -144,7 +145,8 @@ limitations under the License.
   * [Kylin](./interpreter/kylin.html)
   * [Lens](./interpreter/lens.html)
   * [Livy](./interpreter/livy.html)
-  * [markdown](./interpreter/markdown.html)
+  * [Mahout](./interpreter/mahout.html)
+  * [Markdown](./interpreter/markdown.html)
   * [Neo4j](./interpreter/neo4j.html)
   * [Pig](./interpreter/pig.html)
   * [Postgresql, HAWQ](./interpreter/postgresql.html)
@@ -153,10 +155,11 @@ limitations under the License.
   * [SAP](./interpreter/sap.html)
   * [Scalding](./interpreter/scalding.html)
   * [Scio](./interpreter/scio.html)
-  * [Shell](./interpreter/Shell.html)
+  * [Shell](./interpreter/shell.html)
   * [Spark](./interpreter/spark.html)
   
 #### External Resources
   * [Mailing List](https://zeppelin.apache.org/community.html)
   * [Apache Zeppelin Wiki](https://cwiki.apache.org/confluence/display/ZEPPELIN/Zeppelin+Home)
   * [Stackoverflow Questions about Zeppelin (tag: `apache-zeppelin`)](http://stackoverflow.com/questions/tagged/apache-zeppelin)
+

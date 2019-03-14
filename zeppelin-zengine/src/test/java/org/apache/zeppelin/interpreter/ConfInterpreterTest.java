@@ -17,36 +17,31 @@
 
 package org.apache.zeppelin.interpreter;
 
-import com.sun.net.httpserver.Authenticator;
-import org.apache.zeppelin.display.GUI;
 import org.apache.zeppelin.interpreter.remote.RemoteInterpreter;
-import org.apache.zeppelin.user.AuthenticationInfo;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class ConfInterpreterTest extends AbstractInterpreterTest {
 
   @Test
   public void testCorrectConf() throws IOException, InterpreterException {
-    interpreterSettingManager.setInterpreterBinding("user1", "note1", interpreterSettingManager.getSettingIds());
-    assertTrue(interpreterFactory.getInterpreter("user1", "note1", "test.conf") instanceof ConfInterpreter);
-    ConfInterpreter confInterpreter = (ConfInterpreter) interpreterFactory.getInterpreter("user1", "note1", "test.conf");
+    assertTrue(interpreterFactory.getInterpreter("user1", "note1", "test.conf", "test") instanceof ConfInterpreter);
+    ConfInterpreter confInterpreter = (ConfInterpreter) interpreterFactory.getInterpreter("user1", "note1", "test.conf", "test");
 
-    InterpreterContext context = new InterpreterContext("noteId", "paragraphId", "repl",
-        "title", "text", AuthenticationInfo.ANONYMOUS, new HashMap<String, Object>(), new GUI(), new GUI(),
-        null, null, new ArrayList<InterpreterContextRunner>(), null);
+    InterpreterContext context = InterpreterContext.builder()
+        .setNoteId("noteId")
+        .setParagraphId("paragraphId")
+        .build();
+
     InterpreterResult result = confInterpreter.interpret("property_1\tnew_value\nnew_property\tdummy_value", context);
     assertEquals(InterpreterResult.Code.SUCCESS, result.code);
 
-    assertTrue(interpreterFactory.getInterpreter("user1", "note1", "test") instanceof RemoteInterpreter);
-    RemoteInterpreter remoteInterpreter = (RemoteInterpreter) interpreterFactory.getInterpreter("user1", "note1", "test");
+    assertTrue(interpreterFactory.getInterpreter("user1", "note1", "test", "test") instanceof RemoteInterpreter);
+    RemoteInterpreter remoteInterpreter = (RemoteInterpreter) interpreterFactory.getInterpreter("user1", "note1", "test", "test");
     remoteInterpreter.interpret("hello world", context);
     assertEquals(7, remoteInterpreter.getProperties().size());
     assertEquals("new_value", remoteInterpreter.getProperty("property_1"));
@@ -64,18 +59,18 @@ public class ConfInterpreterTest extends AbstractInterpreterTest {
 
   @Test
   public void testEmptyConf() throws IOException, InterpreterException {
-    interpreterSettingManager.setInterpreterBinding("user1", "note1", interpreterSettingManager.getSettingIds());
-    assertTrue(interpreterFactory.getInterpreter("user1", "note1", "test.conf") instanceof ConfInterpreter);
-    ConfInterpreter confInterpreter = (ConfInterpreter) interpreterFactory.getInterpreter("user1", "note1", "test.conf");
+    assertTrue(interpreterFactory.getInterpreter("user1", "note1", "test.conf", "test") instanceof ConfInterpreter);
+    ConfInterpreter confInterpreter = (ConfInterpreter) interpreterFactory.getInterpreter("user1", "note1", "test.conf", "test");
 
-    InterpreterContext context = new InterpreterContext("noteId", "paragraphId", "repl",
-        "title", "text", AuthenticationInfo.ANONYMOUS, new HashMap<String, Object>(), new GUI(), new GUI(),
-        null, null, new ArrayList<InterpreterContextRunner>(), null);
+    InterpreterContext context = InterpreterContext.builder()
+        .setNoteId("noteId")
+        .setParagraphId("paragraphId")
+        .build();
     InterpreterResult result = confInterpreter.interpret("", context);
     assertEquals(InterpreterResult.Code.SUCCESS, result.code);
 
-    assertTrue(interpreterFactory.getInterpreter("user1", "note1", "test") instanceof RemoteInterpreter);
-    RemoteInterpreter remoteInterpreter = (RemoteInterpreter) interpreterFactory.getInterpreter("user1", "note1", "test");
+    assertTrue(interpreterFactory.getInterpreter("user1", "note1", "test", "test") instanceof RemoteInterpreter);
+    RemoteInterpreter remoteInterpreter = (RemoteInterpreter) interpreterFactory.getInterpreter("user1", "note1", "test", "test");
     assertEquals(6, remoteInterpreter.getProperties().size());
     assertEquals("value_1", remoteInterpreter.getProperty("property_1"));
     assertEquals("value_3", remoteInterpreter.getProperty("property_3"));
@@ -84,14 +79,15 @@ public class ConfInterpreterTest extends AbstractInterpreterTest {
 
   @Test
   public void testRunningAfterOtherInterpreter() throws IOException, InterpreterException {
-    interpreterSettingManager.setInterpreterBinding("user1", "note1", interpreterSettingManager.getSettingIds());
-    assertTrue(interpreterFactory.getInterpreter("user1", "note1", "test.conf") instanceof ConfInterpreter);
-    ConfInterpreter confInterpreter = (ConfInterpreter) interpreterFactory.getInterpreter("user1", "note1", "test.conf");
+    assertTrue(interpreterFactory.getInterpreter("user1", "note1", "test.conf", "test") instanceof ConfInterpreter);
+    ConfInterpreter confInterpreter = (ConfInterpreter) interpreterFactory.getInterpreter("user1", "note1", "test.conf", "test");
 
-    InterpreterContext context = new InterpreterContext("noteId", "paragraphId", "repl",
-        "title", "text", AuthenticationInfo.ANONYMOUS, new HashMap<String, Object>(), new GUI(), new GUI(),
-        null, null, new ArrayList<InterpreterContextRunner>(), null);
-    RemoteInterpreter remoteInterpreter = (RemoteInterpreter) interpreterFactory.getInterpreter("user1", "note1", "test");
+    InterpreterContext context = InterpreterContext.builder()
+        .setNoteId("noteId")
+        .setParagraphId("paragraphId")
+        .build();
+
+    RemoteInterpreter remoteInterpreter = (RemoteInterpreter) interpreterFactory.getInterpreter("user1", "note1", "test", "test");
     InterpreterResult result = remoteInterpreter.interpret("hello world", context);
     assertEquals(InterpreterResult.Code.SUCCESS, result.code);
 

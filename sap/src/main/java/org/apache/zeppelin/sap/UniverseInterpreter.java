@@ -18,12 +18,16 @@
 package org.apache.zeppelin.sap;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.zeppelin.interpreter.AbstractInterpreter;
+import org.apache.zeppelin.interpreter.BaseZeppelinContext;
 import org.apache.zeppelin.interpreter.Interpreter;
 import org.apache.zeppelin.interpreter.InterpreterContext;
 import org.apache.zeppelin.interpreter.InterpreterException;
 import org.apache.zeppelin.interpreter.InterpreterResult;
 import org.apache.zeppelin.interpreter.thrift.InterpreterCompletion;
 import org.apache.zeppelin.sap.universe.*;
+import org.apache.zeppelin.scheduler.Scheduler;
+import org.apache.zeppelin.scheduler.SchedulerFactory;
 
 
 import java.util.*;
@@ -34,7 +38,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * SAP Universe interpreter for Zeppelin.
  */
-public class UniverseInterpreter extends Interpreter {
+public class UniverseInterpreter extends AbstractInterpreter {
 
   public UniverseInterpreter(Properties properties) {
     super(properties);
@@ -49,6 +53,11 @@ public class UniverseInterpreter extends Interpreter {
   private static final char NEWLINE = '\n';
   private static final char TAB = '\t';
   private static final String TABLE_MAGIC_TAG = "%table ";
+  private static final String EMPTY_DATA_MESSAGE = "%html\n" +
+      "<h4><center><b>No Data Available</b></center></h4>";
+
+  private static final String CONCURRENT_EXECUTION_KEY = "universe.concurrent.use";
+  private static final String CONCURRENT_EXECUTION_COUNT = "universe.concurrent.maxConnection";
 
   @Override
   public void open() throws InterpreterException {
@@ -56,7 +65,10 @@ public class UniverseInterpreter extends Interpreter {
     String password = getProperty("universe.password");
     String apiUrl = getProperty("universe.api.url");
     String authType = getProperty("universe.authType");
-    this.client = new UniverseClient(user, password, apiUrl, authType);
+    final int queryTimeout = Integer.parseInt(
+        StringUtils.defaultIfEmpty(getProperty("universe.queryTimeout"), "7200000"));
+    this.client =
+        new UniverseClient(user, password, apiUrl, authType, queryTimeout);
     this.universeUtil = new UniverseUtil();
   }
 
@@ -70,7 +82,17 @@ public class UniverseInterpreter extends Interpreter {
   }
 
   @Override
-  public InterpreterResult interpret(String st, InterpreterContext context)
+  protected boolean isInterpolate() {
+    return Boolean.parseBoolean(getProperty("universe.interpolation", "false"));
+  }
+
+  @Override
+  public BaseZeppelinContext getZeppelinContext() {
+    return null;
+  }
+
+  @Override
+  public InterpreterResult internalInterpret(String st, InterpreterContext context)
       throws InterpreterException {
     try {
       InterpreterResult interpreterResult = new InterpreterResult(InterpreterResult.Code.SUCCESS);
@@ -153,9 +175,30 @@ public class UniverseInterpreter extends Interpreter {
     return candidates;
   }
 
+  @Override
+  public Scheduler getScheduler() {
+    String schedulerName = UniverseInterpreter.class.getName() + this.hashCode();
+    return isConcurrentExecution() ?
+        SchedulerFactory.singleton().createOrGetParallelScheduler(schedulerName,
+            getMaxConcurrentConnection())
+        : SchedulerFactory.singleton().createOrGetFIFOScheduler(schedulerName);
+  }
+
+  private boolean isConcurrentExecution() {
+    return Boolean.valueOf(getProperty(CONCURRENT_EXECUTION_KEY, "true"));
+  }
+
+  private int getMaxConcurrentConnection() {
+    return Integer.valueOf(
+        StringUtils.defaultIfEmpty(getProperty(CONCURRENT_EXECUTION_COUNT), "10"));
+  }
+
   private String formatResults(List<List<String>> results) {
     StringBuilder msg = new StringBuilder();
     if (results != null) {
+      if (results.isEmpty()) {
+        return EMPTY_DATA_MESSAGE;
+      }
       msg.append(TABLE_MAGIC_TAG);
       for (int i = 0; i < results.size(); i++) {
         List<String> items = results.get(i);

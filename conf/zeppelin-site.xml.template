@@ -67,6 +67,12 @@
   <description>hide homescreen notebook from list when this value set to true</description>
 </property>
 
+<property>
+  <name>zeppelin.notebook.collaborative.mode.enable</name>
+  <value>true</value>
+  <description>Enable collaborative mode</description>
+</property>
+
 <!-- Google Cloud Storage notebook storage -->
 <!--
 <property>
@@ -77,6 +83,15 @@
     Notes are stored at {zeppelin.notebook.gcs.dir}/{notebook-id}/note.json
  </description>
 </property>
+
+<property>
+  <name>zeppelin.notebook.gcs.credentialsJsonFilePath</name>
+  <value>path/to/key.json</value>
+  <description>
+    Path to GCS credential key file for authentication with Google Storage.
+ </description>
+</property>
+
 
 <property>
   <name>zeppelin.notebook.storage</name>
@@ -107,10 +122,17 @@
 </property>
 
 <property>
+  <name>zeppelin.notebook.s3.timeout</name>
+  <value>120000</value>
+  <description>s3 bucket endpoint request timeout in msec.</description>
+</property>
+
+<property>
   <name>zeppelin.notebook.storage</name>
   <value>org.apache.zeppelin.notebook.repo.S3NotebookRepo</value>
   <description>notebook persistence layer implementation</description>
 </property>
+
 -->
 
 <!-- Additionally, encryption is supported for notebook data stored in S3 -->
@@ -317,20 +339,14 @@
 </property>
 
 <property>
-  <name>zeppelin.interpreters</name>
-  <value>org.apache.zeppelin.spark.SparkInterpreter,org.apache.zeppelin.spark.PySparkInterpreter,org.apache.zeppelin.rinterpreter.RRepl,org.apache.zeppelin.rinterpreter.KnitR,org.apache.zeppelin.spark.SparkRInterpreter,org.apache.zeppelin.spark.SparkSqlInterpreter,org.apache.zeppelin.spark.DepInterpreter,org.apache.zeppelin.markdown.Markdown,org.apache.zeppelin.angular.AngularInterpreter,org.apache.zeppelin.shell.ShellInterpreter,org.apache.zeppelin.file.HDFSFileInterpreter,org.apache.zeppelin.flink.FlinkInterpreter,,org.apache.zeppelin.python.PythonInterpreter,org.apache.zeppelin.python.PythonInterpreterPandasSql,org.apache.zeppelin.python.PythonCondaInterpreter,org.apache.zeppelin.python.PythonDockerInterpreter,org.apache.zeppelin.lens.LensInterpreter,org.apache.zeppelin.ignite.IgniteInterpreter,org.apache.zeppelin.ignite.IgniteSqlInterpreter,org.apache.zeppelin.cassandra.CassandraInterpreter,org.apache.zeppelin.geode.GeodeOqlInterpreter,org.apache.zeppelin.jdbc.JDBCInterpreter,org.apache.zeppelin.kylin.KylinInterpreter,org.apache.zeppelin.elasticsearch.ElasticsearchInterpreter,org.apache.zeppelin.scalding.ScaldingInterpreter,org.apache.zeppelin.alluxio.AlluxioInterpreter,org.apache.zeppelin.hbase.HbaseInterpreter,org.apache.zeppelin.livy.LivySparkInterpreter,org.apache.zeppelin.livy.LivyPySparkInterpreter,org.apache.zeppelin.livy.LivyPySpark3Interpreter,org.apache.zeppelin.livy.LivySparkRInterpreter,org.apache.zeppelin.livy.LivySparkSQLInterpreter,org.apache.zeppelin.bigquery.BigQueryInterpreter,org.apache.zeppelin.beam.BeamInterpreter,org.apache.zeppelin.pig.PigInterpreter,org.apache.zeppelin.pig.PigQueryInterpreter,org.apache.zeppelin.scio.ScioInterpreter,org.apache.zeppelin.groovy.GroovyInterpreter</value>
-  <description>Comma separated interpreter configurations. First interpreter become a default</description>
-</property>
-
-<property>
-  <name>zeppelin.interpreter.group.order</name>
-  <value>spark,md,angular,sh,livy,alluxio,file,psql,flink,python,ignite,lens,cassandra,geode,kylin,elasticsearch,scalding,jdbc,hbase,bigquery,beam,groovy</value>
+  <name>zeppelin.interpreter.group.default</name>
+  <value>spark</value>
   <description></description>
 </property>
 
 <property>
   <name>zeppelin.interpreter.connect.timeout</name>
-  <value>30000</value>
+  <value>60000</value>
   <description>Interpreter process connect timeout in msec.</description>
 </property>
 
@@ -411,6 +427,12 @@
 </property>
 
 <property>
+  <name>zeppelin.username.force.lowercase</name>
+  <value>false</value>
+  <description>Force convert username case to lower case, useful for Active Directory/LDAP. Default is not to change case</description>
+</property>
+
+<property>
   <name>zeppelin.notebook.default.owner.username</name>
   <value></value>
   <description>Set owner role by default</description>
@@ -468,6 +490,36 @@
     <name>zeppelin.server.jetty.request.header.size</name>
     <value>8192</value>
     <description>Http Request Header Size Limit (to prevent HTTP 413)</description>
+</property>
+-->
+
+<!--
+<property>
+    <name>zeppelin.server.jetty.thread.pool.max</name>
+    <value>400</value>
+    <description>Max Thread pool number for QueuedThreadPool in Jetty Server</description>
+</property>
+-->
+<!--
+<property>
+    <name>zeppelin.server.jetty.thread.pool.min</name>
+    <value>8</value>
+    <description>Min Thread pool number for QueuedThreadPool in Jetty Server</description>
+</property>
+-->
+<!--
+<property>
+    <name>zeppelin.server.jetty.thread.pool.timeout</name>
+    <value>30</value>
+    <description>Timeout number for QueuedThreadPool in Jetty Server</description>
+</property>
+-->
+
+<!--
+<property>
+    <name>zeppelin.server.authorization.header.clear</name>
+    <value>true</value>
+    <description>Authorization header to be cleared if server is running as authcBasic</description>
 </property>
 -->
 
@@ -554,4 +606,35 @@
   <description>Notebook cron folders</description>
 </property>
 -->
+
+<property>
+  <name>zeppelin.run.mode</name>
+  <value>auto</value>
+  <description>'auto|local|k8s'</description>
+</property>
+
+<property>
+  <name>zeppelin.k8s.portforward</name>
+  <value>false</value>
+  <description>Port forward to interpreter rpc port. Set 'true' only on local development when zeppelin.k8s.mode 'on'</description>
+</property>
+
+<property>
+  <name>zeppelin.k8s.container.image</name>
+  <value>apache/zeppelin:0.9.0-SNAPSHOT</value>
+  <description>Docker image for interpreters</description>
+</property>
+
+<property>
+  <name>zeppelin.k8s.spark.container.image</name>
+  <value>apache/spark:latest</value>
+  <description>Docker image for Spark executors</description>
+</property>
+
+<property>
+  <name>zeppelin.k8s.template.dir</name>
+  <value>k8s</value>
+  <description>Kubernetes yaml spec files</description>
+</property>
+
 </configuration>

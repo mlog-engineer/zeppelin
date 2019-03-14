@@ -104,13 +104,13 @@ You can also set other Spark properties which are not listed in the table. For a
     <td>Local repository for dependency loader</td>
   </tr>
   <tr>
-    <td>PYSPARK_PYTHON</td>
+    <td><code>PYSPARK_PYTHON</code></td>
     <td>python</td>
     <td>Python binary executable to use for PySpark in both driver and workers (default is <code>python</code>).
             Property <code>spark.pyspark.python</code> take precedence if it is set</td>
   </tr>
   <tr>
-    <td>PYSPARK_DRIVER_PYTHON</td>
+    <td><code>PYSPARK_DRIVER_PYTHON</code></td>
     <td>python</td>
     <td>Python binary executable to use for PySpark in driver only (default is <code>PYSPARK_PYTHON</code>).
             Property <code>spark.pyspark.driver.python</code> take precedence if it is set</td>
@@ -119,6 +119,11 @@ You can also set other Spark properties which are not listed in the table. For a
     <td>zeppelin.spark.concurrentSQL</td>
     <td>false</td>
     <td>Execute multiple SQL concurrently if set true.</td>
+  </tr>
+  <tr>
+    <td>zeppelin.spark.concurrentSQL.max</td>
+    <td>10</td>
+    <td>Max number of SQL concurrently executed</td>
   </tr>
   <tr>
     <td>zeppelin.spark.maxResult</td>
@@ -154,6 +159,10 @@ You can also set other Spark properties which are not listed in the table. For a
   <td>zeppelin.spark.uiWebUrl</td>
     <td></td>
     <td>Overrides Spark UI default URL. Value should be a full URL (ex: http://{hostName}/{uniquePath}</td>
+  </tr>
+  <td>zeppelin.spark.scala.color</td>
+    <td>true</td>
+    <td>Whether to enable color output of spark scala interpreter</td>
   </tr>
 </table>
 
@@ -205,8 +214,7 @@ You can either specify them in `zeppelin-env.sh`, or in interpreter setting page
 in interpreter setting page means you can use multiple versions of `spark` & `hadoop` in one zeppelin instance.
 
 ### 4. New Version of SparkInterpreter
-There's one new version of SparkInterpreter starting with better spark support and code completion from Zeppelin 0.8.0, by default we still use the old version of SparkInterpreter.
-If you want to use the new one, you can configure `zeppelin.spark.useNew` as `true` in its interpreter setting.
+There's one new version of SparkInterpreter with better spark support and code completion starting from Zeppelin 0.8.0. We enable it by default, but user can still use the old version of SparkInterpreter by setting `zeppelin.spark.useNew` as `false` in its interpreter setting.
 
 ## SparkContext, SQLContext, SparkSession, ZeppelinContext
 SparkContext, SQLContext and ZeppelinContext are automatically created and exposed as variable names `sc`, `sqlContext` and `z`, respectively, in Scala, Python and R environments.
@@ -323,158 +331,7 @@ z.load("groupId:artifactId:version").local()
 
 ## ZeppelinContext
 Zeppelin automatically injects `ZeppelinContext` as variable `z` in your Scala/Python environment. `ZeppelinContext` provides some additional functions and utilities.
-
-### Exploring Spark DataFrames
-`ZeppelinContext` provides a `show` method, which, using Zeppelin's `table` feature, can be used to nicely display a Spark DataFrame:
-
-```
-df = spark.read.csv('/path/to/csv')
-z.show(df)
-```
-
-### Object Exchange
-`ZeppelinContext` extends map and it's shared between Scala and Python environment.
-So you can put some objects from Scala and read it from Python, vice versa.
-
-<div class="codetabs">
-  <div data-lang="scala" markdown="1">
-
-{% highlight scala %}
-// Put object from scala
-%spark
-val myObject = ...
-z.put("objName", myObject)
-
-// Exchanging data frames
-myScalaDataFrame = ...
-z.put("myScalaDataFrame", myScalaDataFrame)
-
-val myPythonDataFrame = z.get("myPythonDataFrame").asInstanceOf[DataFrame]
-{% endhighlight %}
-
-  </div>
-  <div data-lang="python" markdown="1">
-
-{% highlight python %}
-# Get object from python
-%spark.pyspark
-myObject = z.get("objName")
-
-# Exchanging data frames
-myPythonDataFrame = ...
-z.put("myPythonDataFrame", postsDf._jdf)
-
-myScalaDataFrame = DataFrame(z.get("myScalaDataFrame"), sqlContext)
-{% endhighlight %}
-
-  </div>
-</div>
-
-### Object Interpolation
-Some interpreters can interpolate object values from `z` into the paragraph text by using the 
-`{variable-name}` syntax. The value of any object previously `put` into `z` can be 
-interpolated into a paragraph text by using such a pattern containing the object's name. 
-The following example shows one use of this facility:
-
-####In Scala cell:
-```
-z.put("minAge", 35)
-```
-
-####In later SQL cell:
-```
-%sql select * from members where age >= {minAge}
-```
-
-The interpolation of a `{var-name}` pattern is performed only when `z` contains an object with the specified name.
-But the pattern is left unchanged if the named object does not exist in `z`.
-Further, all `{var-name}` patterns within the paragraph text must must be translatable for any interpolation to occur -- 
-translation of only some of the patterns in a paragraph text is never done.
-
-In some situations, it is necessary to use { and } characters in a paragraph text without invoking the 
-object interpolation mechanism. For these cases an escaping mechanism is available -- 
-doubled braces {{ and }} should be used. The following example shows the use of {{ and }} for passing a 
-regular expression containing just { and } into the paragraph text.
-
-```
-%sql select * from members where name rlike '[aeiou]{{3}}'
-```
-
-To summarize, patterns of the form `{var-name}` within the paragraph text will be interpolated only if a predefined 
-object of the specified name exists. Additionally, all such patterns within the paragraph text should also 
-be translatable for any interpolation to occur. Patterns of the form `{{any-text}}` are translated into `{any-text}`. 
-These translations are performed only when all occurrences of `{`, `}`, `{{`, and `}}` in the paragraph text conform 
-to one of the two forms described above. Paragraph text containing `{` and/or `}` characters used in any other way 
-(than `{var-name}` and `{{any-text}}`) is used as-is without any changes. 
-No error is flagged in any case. This behavior is identical to the implementation of a similar feature in 
-Jupyter's shell invocation using the `!` magic command.
-
-This feature is disabled by default, and must be explicitly turned on for each interpreter independently 
-by setting the value of an interpreter-specific property to `true`. 
-Consult the _Configuration_ section of each interpreter's documentation 
-to find out if object interpolation is implemented, and the name of the parameter that must be set to `true` to 
-enable the feature. The name of the parameter used to enable this feature it is different for each interpreter. 
-For example, the SparkSQL and Shell interpreters use the parameter names `zeppelin.spark.sql.interpolation` and 
-`zeppelin.shell.interpolation` respectively.
-
-At present only the SparkSQL and Shell interpreters support object interpolation. 
-
-### Form Creation
-
-`ZeppelinContext` provides functions for creating forms.
-In Scala and Python environments, you can create forms programmatically.
-<div class="codetabs">
-  <div data-lang="scala" markdown="1">
-
-{% highlight scala %}
-%spark
-/* Create text input form */
-z.input("formName")
-
-/* Create text input form with default value */
-z.input("formName", "defaultValue")
-
-/* Create select form */
-z.select("formName", Seq(("option1", "option1DisplayName"),
-                         ("option2", "option2DisplayName")))
-
-/* Create select form with default value*/
-z.select("formName", "option1", Seq(("option1", "option1DisplayName"),
-                                    ("option2", "option2DisplayName")))
-{% endhighlight %}
-
-  </div>
-  <div data-lang="python" markdown="1">
-
-{% highlight python %}
-%spark.pyspark
-# Create text input form
-z.input("formName")
-
-# Create text input form with default value
-z.input("formName", "defaultValue")
-
-# Create select form
-z.select("formName", [("option1", "option1DisplayName"),
-                      ("option2", "option2DisplayName")])
-
-# Create select form with default value
-z.select("formName", [("option1", "option1DisplayName"),
-                      ("option2", "option2DisplayName")], "option1")
-{% endhighlight %}
-
-  </div>
-</div>
-
-In sql environment, you can create form in simple template.
-
-```sql
-%spark.sql
-select * from ${table=defaultTableName} where text like '%${search}%'
-```
-
-To learn more about dynamic form, checkout [Dynamic Form](../usage/dynamic_form/intro.html).
-
+See [Zeppelin-Context](../usage/other_features/zeppelin_context.html) for more details.
 
 ## Matplotlib Integration (pyspark)
 Both the `python` and `pyspark` interpreters have built-in support for inline visualization using `matplotlib`,
@@ -484,6 +341,21 @@ utilizing Zeppelin's built-in [Angular Display System](../usage/display_system/a
 
 <img class="img-responsive" src="{{BASE_PATH}}/assets/themes/zeppelin/img/docs-img/matplotlibAngularExample.gif" />
 
+## Running spark sql concurrently
+By default, each sql statement would run sequentially in `%spark.sql`. But you can run them concurrently by following setup.
+
+1. set `zeppelin.spark.concurrentSQL` to true to enable the sql concurrent feature, underneath zeppelin will change to use fairscheduler for spark. And also set `zeppelin.spark.concurrentSQL.max` to control the max number of sql statements running concurrently.
+2. configure pools by creating `fairscheduler.xml` under your `SPARK_CONF_DIR`, check the offical spark doc [Configuring Pool Properties](http://spark.apache.org/docs/latest/job-scheduling.html#configuring-pool-properties)
+3. set pool property via setting paragraph property. e.g.
+
+```
+%spark(pool=pool1)
+
+sql statement
+```
+
+This feature is available for both all versions of scala spark, pyspark. For sparkr, it is only available starting from 2.3.0.
+ 
 ## Interpreter setting option
 
 You can choose one of `shared`, `scoped` and `isolated` options wheh you configure Spark interpreter.
@@ -512,9 +384,12 @@ This is to make the server communicate with KDC.
 
 3. Add the two properties below to Spark configuration (`[SPARK_HOME]/conf/spark-defaults.conf`):
 
-        spark.yarn.principal
-        spark.yarn.keytab
+    ```
+    spark.yarn.principal
+    spark.yarn.keytab
+    ```
 
   > **NOTE:** If you do not have permission to access for the above spark-defaults.conf file, optionally, you can add the above lines to the Spark Interpreter setting through the Interpreter tab in the Zeppelin UI.
 
 4. That's it. Play with Zeppelin!
+

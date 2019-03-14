@@ -17,23 +17,23 @@
 
 package org.apache.zeppelin.spark;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Properties;
-
-import org.apache.zeppelin.display.AngularObjectRegistry;
-import org.apache.zeppelin.user.AuthenticationInfo;
-import org.apache.zeppelin.display.GUI;
-import org.apache.zeppelin.interpreter.*;
+import org.apache.zeppelin.interpreter.Interpreter;
+import org.apache.zeppelin.interpreter.InterpreterContext;
+import org.apache.zeppelin.interpreter.InterpreterException;
+import org.apache.zeppelin.interpreter.InterpreterGroup;
+import org.apache.zeppelin.interpreter.InterpreterResult;
 import org.apache.zeppelin.interpreter.InterpreterResult.Code;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.Properties;
+
+import static org.junit.Assert.assertEquals;
 
 public class DepInterpreterTest {
 
@@ -63,11 +63,8 @@ public class DepInterpreterTest {
     intpGroup.get("note").add(dep);
     dep.setInterpreterGroup(intpGroup);
 
-    context = new InterpreterContext("note", "id", null, "title", "text", new AuthenticationInfo(),
-        new HashMap<String, Object>(), new GUI(), new GUI(),
-        new AngularObjectRegistry(intpGroup.getId(), null),
-        null,
-        new LinkedList<InterpreterContextRunner>(), null);
+    context = InterpreterContext.builder()
+        .build();;
   }
 
   @After
@@ -76,19 +73,12 @@ public class DepInterpreterTest {
   }
 
   @Test
-  public void testDefault() {
+  public void testDefault() throws InterpreterException {
     dep.getDependencyContext().reset();
     InterpreterResult ret = dep.interpret("z.load(\"org.apache.commons:commons-csv:1.1\")", context);
     assertEquals(Code.SUCCESS, ret.code());
 
     assertEquals(1, dep.getDependencyContext().getFiles().size());
     assertEquals(1, dep.getDependencyContext().getFilesDist().size());
-
-    // Add a test for the spark-packages repo - default in additionalRemoteRepository
-    ret = dep.interpret("z.load(\"amplab:spark-indexedrdd:0.3\")", context);
-    assertEquals(Code.SUCCESS, ret.code());
-
-    // Reset at the end of the test
-    dep.getDependencyContext().reset();
   }
 }

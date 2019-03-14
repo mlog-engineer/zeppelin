@@ -16,13 +16,15 @@
  */
 package org.apache.zeppelin.realm;
 
+import com.google.common.base.Joiner;
+import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.PutMethod;
@@ -40,20 +42,16 @@ import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.zeppelin.common.JsonSerializable;
 import org.apache.zeppelin.notebook.repo.zeppelinhub.model.UserSessionContainer;
 import org.apache.zeppelin.notebook.repo.zeppelinhub.websocket.utils.ZeppelinhubUtils;
-import org.apache.zeppelin.server.ZeppelinServer;
+import org.apache.zeppelin.service.ServiceContext;
+import org.apache.zeppelin.socket.NotebookServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Joiner;
-import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
 
 /**
  * A {@code Realm} implementation that uses the ZeppelinHub to authenticate users.
  *
  */
 public class ZeppelinHubRealm extends AuthorizingRealm {
-
   private static final Logger LOG = LoggerFactory.getLogger(ZeppelinHubRealm.class);
   private static final String DEFAULT_ZEPPELINHUB_URL = "https://www.zeppelinhub.com";
   private static final String USER_LOGIN_API_ENDPOINT = "api/v1/users/login";
@@ -78,7 +76,7 @@ public class ZeppelinHubRealm extends AuthorizingRealm {
 
   @Override
   protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authToken)
-      throws AuthenticationException {
+          throws AuthenticationException {
     UsernamePasswordToken token = (UsernamePasswordToken) authToken;
     if (StringUtils.isBlank(token.getUsername())) {
       throw new AccountException("Empty usernames are not allowed by this realm.");
@@ -101,7 +99,8 @@ public class ZeppelinHubRealm extends AuthorizingRealm {
 
   /**
    * Setter of ZeppelinHub URL, this will be called by Shiro based on zeppelinhubUrl property
-   * in shiro.ini file.</p>
+   * in shiro.ini file.
+   *
    * It will also perform a check of ZeppelinHub url {@link #isZeppelinHubUrlValid},
    * if the url is not valid, the default zeppelinhub url will be used.
    *
@@ -127,8 +126,8 @@ public class ZeppelinHubRealm extends AuthorizingRealm {
    */
   protected User authenticateUser(String requestBody) {
     PutMethod put = new PutMethod(Joiner.on("/").join(zeppelinhubUrl, USER_LOGIN_API_ENDPOINT));
-    String responseBody = StringUtils.EMPTY;
-    String userSession = StringUtils.EMPTY;
+    String responseBody;
+    String userSession;
     try {
       put.setRequestEntity(new StringRequestEntity(requestBody, JSON_CONTENT_TYPE, UTF_8_ENCODING));
       int statusCode = httpClient.executeMethod(put);
@@ -147,7 +146,7 @@ public class ZeppelinHubRealm extends AuthorizingRealm {
       throw new AuthenticationException(e.getMessage());
     }
 
-    User account = null;
+    User account;
     try {
       account = User.fromJson(responseBody);
     } catch (JsonParseException e) {
@@ -161,14 +160,15 @@ public class ZeppelinHubRealm extends AuthorizingRealm {
   }
 
   /**
-   * Create a JSON String that represent login payload.</p>
+   * Create a JSON String that represent login payload.
+   *
    * Payload will look like:
-   * <code>
+   * {@code
    *  {
    *   'login': 'userLogin',
    *   'password': 'userpassword'
    *  }
-   * </code>
+   * }
    * @param login
    * @param pwd
    * @return
@@ -179,7 +179,7 @@ public class ZeppelinHubRealm extends AuthorizingRealm {
   }
 
   /**
-   * Perform a Simple URL check by using <code>URI(url).toURL()</code>.
+   * Perform a Simple URL check by using {@code URI(url).toURL()}.
    * If the url is not valid, the try-catch condition will catch the exceptions and return false,
    * otherwise true will be returned.
    *
@@ -220,10 +220,16 @@ public class ZeppelinHubRealm extends AuthorizingRealm {
     UserSessionContainer.instance.setSession(username, session);
 
     /* TODO(xxx): add proper roles */
-    HashSet<String> userAndRoles = new HashSet<String>();
+    HashSet<String> userAndRoles = new HashSet<>();
     userAndRoles.add(username);
-    ZeppelinServer.notebookWsServer.broadcastReloadedNoteList(
+    ServiceContext context = new ServiceContext(
         new org.apache.zeppelin.user.AuthenticationInfo(username), userAndRoles);
+    try {
+      // This can failed to get NotebookServer instance with very rare cases
+      NotebookServer.getInstance().broadcastReloadedNoteList(null, context);
+    } catch (IOException e) {
+      LOG.error("Fail to broadcastReloadedNoteList", e);
+    }
 
     ZeppelinhubUtils.userLoginRoutine(username);
   }
