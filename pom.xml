@@ -56,31 +56,31 @@
     <module>zeppelin-interpreter</module>
     <module>zeppelin-zengine</module>
     <module>zeppelin-display</module>
-    <module>groovy</module>
+    <!--<module>groovy</module>-->
     <module>spark</module>
     <module>markdown</module>
     <module>angular</module>
     <module>shell</module>
-    <module>livy</module>
-    <module>hbase</module>
-    <module>pig</module>
+    <!--<module>livy</module>-->
+    <!--<module>hbase</module>-->
+    <!--<module>pig</module>-->
     <module>jdbc</module>
-    <module>file</module>
-    <module>flink</module>
-    <module>ignite</module>
-    <module>kylin</module>
+    <!--<module>file</module>-->
+    <!--<module>flink</module>-->
+    <!--<module>ignite</module>-->
+    <!--<module>kylin</module>-->
     <module>python</module>
-    <module>lens</module>
-    <module>cassandra</module>
-    <module>elasticsearch</module>
-    <module>bigquery</module>
-    <module>alluxio</module>
-    <module>scio</module>
-    <module>neo4j</module>
-    <module>sap</module>
+    <!--<module>lens</module>-->
+    <!--<module>cassandra</module>-->
+    <!--<module>elasticsearch</module>-->
+    <!--<module>bigquery</module>-->
+    <!--<module>alluxio</module>-->
+    <!--<module>scio</module>-->
+    <!--<module>neo4j</module>-->
+    <!--<module>sap</module>-->
     <module>zeppelin-web</module>
     <module>zeppelin-server</module>
-    <module>zeppelin-jupyter</module>
+    <!--<module>zeppelin-jupyter</module>-->
     <module>zeppelin-distribution</module>
   </modules>
 
@@ -781,26 +781,6 @@
       </modules>
     </profile>
 
-    <profile>
-      <id>scalding</id>
-      <modules>
-        <module>scalding</module>
-      </modules>
-    </profile>
-
-    <profile>
-      <id>beam</id>
-      <modules>
-        <module>beam</module>
-      </modules>
-    </profile>
-
-    <profile>
-      <id>scio</id>
-      <modules>
-        <module>scio</module>
-      </modules>
-    </profile>
 
     <profile>
       <id>examples</id>

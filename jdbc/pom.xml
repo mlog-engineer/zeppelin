@@ -238,6 +238,8 @@
 
     <!--test library versions-->
     <mockrunner.jdbc.version>1.0.8</mockrunner.jdbc.version>
+    <mysql.connector.version>5.1.38</mysql.connector.version>
+    <presto.version>0.212</presto.version>
   </properties>
   
   <dependencies>
@@ -348,6 +350,22 @@
           <artifactId>jsch</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>18.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.facebook.presto</groupId>
+      <artifactId>presto-jdbc</artifactId>
+      <version>${presto.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <version>${mysql.connector.version}</version>
     </dependency>
   </dependencies>
 

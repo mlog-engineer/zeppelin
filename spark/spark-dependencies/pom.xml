@@ -308,6 +308,12 @@
       <version>${yarn.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scalap</artifactId>
+      <version>${scala.version}</version>
+    </dependency>
+
   </dependencies>
 
   <build>

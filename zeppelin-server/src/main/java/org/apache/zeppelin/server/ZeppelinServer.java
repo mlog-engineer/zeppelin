@@ -115,10 +115,10 @@ public class ZeppelinServer extends Application {
               break;
             }
           }
-          if (isIniRealmEnabled) {
-            throw new Exception("IniRealm/password based auth mechanisms should be exclusive. "
-                + "Consider removing [users] block from shiro.ini");
-          }
+          //if (isIniRealmEnabled) {
+          // throw new Exception("IniRealm/password based auth mechanisms should be exclusive. "
+          //      + "Consider removing [users] block from shiro.ini");
+          //}
         }
       } catch (UnavailableSecurityManagerException e) {
         LOG.error("Failed to initialise shiro configuraion", e);

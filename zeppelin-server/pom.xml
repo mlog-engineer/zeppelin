@@ -79,6 +79,13 @@
         <artifactId>scalap</artifactId>
         <version>${scala.version}</version>
       </dependency>
+
+      <dependency>
+        <groupId>org.apache.shiro</groupId>
+        <artifactId>shiro-ehcache</artifactId>
+        <version>${shiro.version}</version>
+      </dependency>
+
     </dependencies>
   </dependencyManagement>
 
@@ -195,6 +202,11 @@
     <dependency>
       <groupId>org.apache.shiro</groupId>
       <artifactId>shiro-web</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.shiro</groupId>
+      <artifactId>shiro-ehcache</artifactId>
     </dependency>
 
     <dependency>

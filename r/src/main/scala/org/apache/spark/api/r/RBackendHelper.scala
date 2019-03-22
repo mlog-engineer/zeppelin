@@ -30,8 +30,12 @@ class RBackendHelper(val backend : RBackend) {
   var port : Int = 0
 
   def init() : Int = {
-    port = backend.init()
-    port
+      //spark 2.1.3
+      val (port, _) = backend.init()
+      port
+
+      //port = backend.init()
+      //port
   }
 
   val backendThread : Thread = new Thread("SparkR backend") {

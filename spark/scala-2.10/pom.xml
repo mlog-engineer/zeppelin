@@ -35,7 +35,7 @@
   <properties>
     <scala.version>2.10.5</scala.version>
     <scala.binary.version>2.10</scala.binary.version>
-    <scala.compile.version>${scala.version}</scala.compile.version>
+    <scala.compile.version>2.10.5</scala.compile.version>
   </properties>
 
 </project>
