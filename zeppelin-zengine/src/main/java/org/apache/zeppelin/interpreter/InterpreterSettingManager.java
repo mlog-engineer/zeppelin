@@ -462,6 +462,7 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
     }
   }
 
+
   public ManagedInterpreterGroup getInterpreterGroupById(String groupId) {
     for (InterpreterSetting setting : interpreterSettings.values()) {
       ManagedInterpreterGroup interpreterGroup = setting.getInterpreterGroup(groupId);
@@ -666,7 +667,6 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
   public InterpreterSetting createNewSetting(String name, String group,
       List<Dependency> dependencies, InterpreterOption option, Map<String, InterpreterProperty> p)
       throws IOException {
-
     if (name.indexOf(".") >= 0) {
       throw new IOException("'.' is invalid for InterpreterSetting name.");
     }
@@ -688,6 +688,8 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
     saveToFile();
     return setting;
   }
+
+
 
   @VisibleForTesting
   public void addInterpreterSetting(InterpreterSetting interpreterSetting) {
@@ -870,6 +872,22 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
 
     File localRepoDir = new File(conf.getInterpreterLocalRepoPath() + "/" + id);
     FileUtils.deleteDirectory(localRepoDir);
+  }
+
+
+  public List<InterpreterSetting> getUserAvailableSettings(String principal){
+    List<InterpreterSetting> settings = this.get();
+    List<InterpreterSetting> returnSettings = new ArrayList<>();
+    for (InterpreterSetting setting : settings) {
+      if (setting.getOption().getOwners() != null && setting.getOption().getOwners().size() > 0) {
+        if (setting.getOption().getOwners().contains(principal)) {
+          returnSettings.add(setting);
+        }
+      } else {
+        returnSettings.add(setting);
+      }
+    }
+    return returnSettings;
   }
 
   /**

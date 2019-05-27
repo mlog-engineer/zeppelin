@@ -26,6 +26,8 @@ import org.apache.zeppelin.interpreter.thrift.RemoteInterpreterService.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Date;
+
 /**
  * Abstract class for interpreter process
  */
@@ -36,6 +38,7 @@ public abstract class RemoteInterpreterProcess implements InterpreterClient {
   private RemoteInterpreterEventPoller remoteInterpreterEventPoller;
   private final InterpreterContextRunnerPool interpreterContextRunnerPool;
   private int connectTimeout;
+  protected Date startTime;
 
   public RemoteInterpreterProcess(
       int connectTimeout) {
@@ -53,6 +56,10 @@ public abstract class RemoteInterpreterProcess implements InterpreterClient {
 
   public int getConnectTimeout() {
     return connectTimeout;
+  }
+
+  public Date getStartTime() {
+    return startTime;
   }
 
   public synchronized Client getClient() throws Exception {

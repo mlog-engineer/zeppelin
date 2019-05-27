@@ -35,6 +35,10 @@ import './app/visualization/builtins/visualization-areachart.js';
 import './app/visualization/builtins/visualization-linechart.js';
 import './app/visualization/builtins/visualization-scatterchart.js';
 
+import './app/remoteinterpreter/remoteinterpreter.controller.js';
+import './app/remoteinterpreter/interpreter/interpreter.controller.js';
+import './app/remoteinterpreter/remoteinterpreter.filter.js';
+
 import './app/jobmanager/jobmanager.component.js';
 import './app/interpreter/interpreter.controller.js';
 import './app/interpreter/interpreter.filter.js';

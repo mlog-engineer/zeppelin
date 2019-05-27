@@ -3,7 +3,7 @@
     {
       "text": "%md\n### Intro\nThis notebook is an example of how to use **Apache Flink** for processing simple data sets. We will take an open airline data set from [stat-computing.org](http://stat-computing.org) and find out who was the most popular carrier during 1998-2000 years. Next we will build a chart that shows flights distribution by months and look how it changes from year to year. We will use Zeppelin `%table` display system to build charts.",
       "user": "anonymous",
-      "dateUpdated": "Jan 9, 2017 11:55:42 AM",
+      "dateUpdated": "2019-05-23 17:35:15.035",
       "config": {
         "colWidth": 12.0,
         "enabled": true,
@@ -13,16 +13,14 @@
           "editOnDblClick": true
         },
         "editorMode": "ace/mode/markdown",
-        "editorHide": true,
-        "tableHide": false
+        "editorHide": false,
+        "tableHide": true,
+        "fontSize": 9.0
       },
       "settings": {
         "params": {},
         "forms": {}
       },
-      "apps": [],
-      "jobName": "paragraph_1483952101049_-1120777567",
-      "id": "20170109-115501_192763014",
       "results": {
         "code": "SUCCESS",
         "msg": [
@@ -32,16 +30,19 @@
           }
         ]
       },
-      "dateCreated": "Jan 9, 2017 11:55:01 AM",
-      "dateStarted": "Jan 9, 2017 11:55:42 AM",
-      "dateFinished": "Jan 9, 2017 11:55:44 AM",
+      "apps": [],
+      "jobName": "paragraph_1483952101049_-1120777567",
+      "id": "20170109-115501_192763014",
+      "dateCreated": "2017-01-09 11:55:01.000",
+      "dateStarted": "2017-01-09 11:55:42.000",
+      "dateFinished": "2017-01-09 11:55:44.000",
       "status": "FINISHED",
       "progressUpdateIntervalMs": 500
     },
     {
       "text": "%md\n### Getting the data\nFirst we need to download and unpack the data. We will get three big data sets with flight details (one pack for each year) and a small one with carriers names. In total we will get for about 1,5 GB of data. To be able to process such amount of data it is recommended to increase `shell.command.timeout.millisecs` value in `%sh` interpreter settings up to several minutes. You can find interpreters configuration by clicking on `Interpreter` in a drop-down menu from the top right corner of the Zeppelin web-ui.",
       "user": "anonymous",
-      "dateUpdated": "Jan 9, 2017 11:56:08 AM",
+      "dateUpdated": "2017-01-09 11:56:08.000",
       "config": {
         "colWidth": 12.0,
         "enabled": true,
@@ -57,9 +58,6 @@
         "params": {},
         "forms": {}
       },
-      "apps": [],
-      "jobName": "paragraph_1483952142017_284386712",
-      "id": "20170109-115542_1487437739",
       "results": {
         "code": "SUCCESS",
         "msg": [
@@ -69,16 +67,19 @@
           }
         ]
       },
-      "dateCreated": "Jan 9, 2017 11:55:42 AM",
-      "dateStarted": "Jan 9, 2017 11:56:07 AM",
-      "dateFinished": "Jan 9, 2017 11:56:07 AM",
+      "apps": [],
+      "jobName": "paragraph_1483952142017_284386712",
+      "id": "20170109-115542_1487437739",
+      "dateCreated": "2017-01-09 11:55:42.000",
+      "dateStarted": "2017-01-09 11:56:07.000",
+      "dateFinished": "2017-01-09 11:56:07.000",
       "status": "FINISHED",
       "progressUpdateIntervalMs": 500
     },
     {
       "text": "%sh\n\nrm /tmp/flights98.csv.bz2\ncurl -o /tmp/flights98.csv.bz2 \"http://stat-computing.org/dataexpo/2009/1998.csv.bz2\"\nrm /tmp/flights98.csv\nbzip2 -d /tmp/flights98.csv.bz2\nchmod 666 /tmp/flights98.csv",
       "user": "anonymous",
-      "dateUpdated": "Jan 9, 2017 11:59:02 AM",
+      "dateUpdated": "2017-01-09 11:59:02.000",
       "config": {
         "colWidth": 12.0,
         "enabled": true,
@@ -94,9 +95,6 @@
         "params": {},
         "forms": {}
       },
-      "apps": [],
-      "jobName": "paragraph_1483952167547_-566831096",
-      "id": "20170109-115607_1634441713",
       "results": {
         "code": "SUCCESS",
         "msg": [
@@ -106,16 +104,19 @@
           }
         ]
       },
-      "dateCreated": "Jan 9, 2017 11:56:07 AM",
-      "dateStarted": "Jan 9, 2017 11:57:37 AM",
-      "dateFinished": "Jan 9, 2017 11:58:50 AM",
+      "apps": [],
+      "jobName": "paragraph_1483952167547_-566831096",
+      "id": "20170109-115607_1634441713",
+      "dateCreated": "2017-01-09 11:56:07.000",
+      "dateStarted": "2017-01-09 11:57:37.000",
+      "dateFinished": "2017-01-09 11:58:50.000",
       "status": "FINISHED",
       "progressUpdateIntervalMs": 500
     },
     {
       "text": "%sh\n\nrm /tmp/flights99.csv.bz2\ncurl -o /tmp/flights99.csv.bz2 \"http://stat-computing.org/dataexpo/2009/1999.csv.bz2\"\nrm /tmp/flights99.csv\nbzip2 -d /tmp/flights99.csv.bz2\nchmod 666 /tmp/flights99.csv",
       "user": "anonymous",
-      "dateUpdated": "Jan 9, 2017 11:59:59 AM",
+      "dateUpdated": "2017-01-09 11:59:59.000",
       "config": {
         "colWidth": 12.0,
         "enabled": true,
@@ -131,9 +132,6 @@
         "params": {},
         "forms": {}
       },
-      "apps": [],
-      "jobName": "paragraph_1483952257873_-1874269156",
-      "id": "20170109-115737_1346880844",
       "results": {
         "code": "SUCCESS",
         "msg": [
@@ -143,16 +141,19 @@
           }
         ]
       },
-      "dateCreated": "Jan 9, 2017 11:57:37 AM",
-      "dateStarted": "Jan 9, 2017 11:59:04 AM",
-      "dateFinished": "Jan 9, 2017 11:59:53 AM",
+      "apps": [],
+      "jobName": "paragraph_1483952257873_-1874269156",
+      "id": "20170109-115737_1346880844",
+      "dateCreated": "2017-01-09 11:57:37.000",
+      "dateStarted": "2017-01-09 11:59:04.000",
+      "dateFinished": "2017-01-09 11:59:53.000",
       "status": "FINISHED",
       "progressUpdateIntervalMs": 500
     },
     {
       "text": "%sh\n\nrm /tmp/flights00.csv.bz2\ncurl -o /tmp/flights00.csv.bz2 \"http://stat-computing.org/dataexpo/2009/2000.csv.bz2\"\nrm /tmp/flights00.csv\nbzip2 -d /tmp/flights00.csv.bz2\nchmod 666 /tmp/flights00.csv",
       "user": "anonymous",
-      "dateUpdated": "Jan 9, 2017 12:01:42 PM",
+      "dateUpdated": "2017-01-09 12:01:42.000",
       "config": {
         "colWidth": 12.0,
         "enabled": true,
@@ -168,9 +169,6 @@
         "params": {},
         "forms": {}
       },
-      "apps": [],
-      "jobName": "paragraph_1483952312038_-1315320949",
-      "id": "20170109-115832_608069986",
       "results": {
         "code": "SUCCESS",
         "msg": [
@@ -180,16 +178,19 @@
           }
         ]
       },
-      "dateCreated": "Jan 9, 2017 11:58:32 AM",
-      "dateStarted": "Jan 9, 2017 12:00:01 PM",
-      "dateFinished": "Jan 9, 2017 12:01:34 PM",
+      "apps": [],
+      "jobName": "paragraph_1483952312038_-1315320949",
+      "id": "20170109-115832_608069986",
+      "dateCreated": "2017-01-09 11:58:32.000",
+      "dateStarted": "2017-01-09 12:00:01.000",
+      "dateFinished": "2017-01-09 12:01:34.000",
       "status": "FINISHED",
       "progressUpdateIntervalMs": 500
     },
     {
       "text": "%sh\n\nrm /tmp/carriers.csv\ncurl -o /tmp/carriers.csv \"http://stat-computing.org/dataexpo/2009/carriers.csv\"\nchmod 666 /tmp/carriers.csv",
       "user": "anonymous",
-      "dateUpdated": "Jan 9, 2017 12:01:48 PM",
+      "dateUpdated": "2017-01-09 12:01:48.000",
       "config": {
         "colWidth": 12.0,
         "enabled": true,
@@ -205,9 +206,6 @@
         "params": {},
         "forms": {}
       },
-      "apps": [],
-      "jobName": "paragraph_1483952329229_2136292082",
-      "id": "20170109-115849_1794095031",
       "results": {
         "code": "SUCCESS",
         "msg": [
@@ -217,16 +215,19 @@
           }
         ]
       },
-      "dateCreated": "Jan 9, 2017 11:58:49 AM",
-      "dateStarted": "Jan 9, 2017 12:01:44 PM",
-      "dateFinished": "Jan 9, 2017 12:01:45 PM",
+      "apps": [],
+      "jobName": "paragraph_1483952329229_2136292082",
+      "id": "20170109-115849_1794095031",
+      "dateCreated": "2017-01-09 11:58:49.000",
+      "dateStarted": "2017-01-09 12:01:44.000",
+      "dateFinished": "2017-01-09 12:01:45.000",
       "status": "FINISHED",
       "progressUpdateIntervalMs": 500
     },
     {
       "text": "%md\n### Preparing the data\nThe `flights\u003cYY\u003e.csv` contains various data but we only need the information about the year, the month and the carrier who served the flight. Let\u0027s retrieve this information and create `DataSets`.",
       "user": "anonymous",
-      "dateUpdated": "Jan 9, 2017 12:01:51 PM",
+      "dateUpdated": "2017-01-09 12:01:51.000",
       "config": {
         "colWidth": 12.0,
         "enabled": true,
@@ -243,9 +244,6 @@
         "params": {},
         "forms": {}
       },
-      "apps": [],
-      "jobName": "paragraph_1483952363836_-1769111757",
-      "id": "20170109-115923_963126574",
       "results": {
         "code": "SUCCESS",
         "msg": [
@@ -255,16 +253,19 @@
           }
         ]
       },
-      "dateCreated": "Jan 9, 2017 11:59:23 AM",
-      "dateStarted": "Jan 9, 2017 12:01:51 PM",
-      "dateFinished": "Jan 9, 2017 12:01:53 PM",
+      "apps": [],
+      "jobName": "paragraph_1483952363836_-1769111757",
+      "id": "20170109-115923_963126574",
+      "dateCreated": "2017-01-09 11:59:23.000",
+      "dateStarted": "2017-01-09 12:01:51.000",
+      "dateFinished": "2017-01-09 12:01:53.000",
       "status": "FINISHED",
       "progressUpdateIntervalMs": 500
     },
     {
       "text": "%flink\n\ncase class Flight(year: Int, month: Int, carrierCode: String)\ncase class Carrier(code: String, name: String)\n\nval flights98 \u003d benv.readCsvFile[Flight](\"/tmp/flights98.csv\", ignoreFirstLine \u003d true, includedFields \u003d Array(0, 1, 8))\nval flights99 \u003d benv.readCsvFile[Flight](\"/tmp/flights99.csv\", ignoreFirstLine \u003d true, includedFields \u003d Array(0, 1, 8))\nval flights00 \u003d benv.readCsvFile[Flight](\"/tmp/flights00.csv\", ignoreFirstLine \u003d true, includedFields \u003d Array(0, 1, 8))\nval flights \u003d flights98.union(flights99).union(flights00)\nval carriers \u003d benv.readCsvFile[Carrier](\"/tmp/carriers.csv\", ignoreFirstLine \u003d true, quoteCharacter \u003d \u0027\"\u0027)",
       "user": "anonymous",
-      "dateUpdated": "Jan 9, 2017 12:02:38 PM",
+      "dateUpdated": "2017-01-09 12:02:38.000",
       "config": {
         "colWidth": 12.0,
         "enabled": true,
@@ -281,9 +282,6 @@
         "params": {},
         "forms": {}
       },
-      "apps": [],
-      "jobName": "paragraph_1483952511284_-589624871",
-      "id": "20170109-120151_872852428",
       "results": {
         "code": "SUCCESS",
         "msg": [
@@ -293,16 +291,19 @@
           }
         ]
       },
-      "dateCreated": "Jan 9, 2017 12:01:51 PM",
-      "dateStarted": "Jan 9, 2017 12:02:10 PM",
-      "dateFinished": "Jan 9, 2017 12:02:29 PM",
+      "apps": [],
+      "jobName": "paragraph_1483952511284_-589624871",
+      "id": "20170109-120151_872852428",
+      "dateCreated": "2017-01-09 12:01:51.000",
+      "dateStarted": "2017-01-09 12:02:10.000",
+      "dateFinished": "2017-01-09 12:02:29.000",
       "status": "FINISHED",
       "progressUpdateIntervalMs": 500
     },
     {
       "text": "%md\n### Choosing the carrier\nNow we will search for the most popular carrier during the whole time period.",
       "user": "anonymous",
-      "dateUpdated": "Jan 9, 2017 12:03:08 PM",
+      "dateUpdated": "2017-01-09 12:03:08.000",
       "config": {
         "colWidth": 12.0,
         "enabled": true,
@@ -319,9 +320,6 @@
         "params": {},
         "forms": {}
       },
-      "apps": [],
-      "jobName": "paragraph_1483952530113_212237809",
-      "id": "20170109-120210_773710997",
       "results": {
         "code": "SUCCESS",
         "msg": [
@@ -331,16 +329,19 @@
           }
         ]
       },
-      "dateCreated": "Jan 9, 2017 12:02:10 PM",
-      "dateStarted": "Jan 9, 2017 12:03:08 PM",
-      "dateFinished": "Jan 9, 2017 12:03:08 PM",
+      "apps": [],
+      "jobName": "paragraph_1483952530113_212237809",
+      "id": "20170109-120210_773710997",
+      "dateCreated": "2017-01-09 12:02:10.000",
+      "dateStarted": "2017-01-09 12:03:08.000",
+      "dateFinished": "2017-01-09 12:03:08.000",
       "status": "FINISHED",
       "progressUpdateIntervalMs": 500
     },
     {
       "text": "%flink\n\nimport org.apache.flink.api.common.operators.Order\nimport org.apache.flink.api.java.aggregation.Aggregations\n\ncase class CarrierFlightsCount(carrierCode: String, count: Int)\ncase class CountByMonth(month: Int, count: Int)\n\nval carriersFlights \u003d flights\n  .map(f \u003d\u003e CarrierFlightsCount(f.carrierCode, 1))\n  .groupBy(\"carrierCode\")\n  .sum(\"count\")\n\nval maxFlights \u003d carriersFlights\n  .aggregate(Aggregations.MAX, \"count\")\n\nval bestCarrier \u003d carriersFlights\n  .join(maxFlights)\n  .where(\"count\")\n  .equalTo(\"count\")\n  .map(_._1)\n  \nval carrierName \u003d bestCarrier\n  .join(carriers)\n  .where(\"carrierCode\")\n  .equalTo(\"code\")\n  .map(_._2.name)\n  .collect\n  .head",
       "user": "anonymous",
-      "dateUpdated": "Jan 9, 2017 12:04:04 PM",
+      "dateUpdated": "2017-01-09 12:04:04.000",
       "config": {
         "colWidth": 12.0,
         "enabled": true,
@@ -357,9 +358,6 @@
         "params": {},
         "forms": {}
       },
-      "apps": [],
-      "jobName": "paragraph_1483952588708_-1770095793",
-      "id": "20170109-120308_1328511597",
       "results": {
         "code": "SUCCESS",
         "msg": [
@@ -369,16 +367,19 @@
           }
         ]
       },
-      "dateCreated": "Jan 9, 2017 12:03:08 PM",
-      "dateStarted": "Jan 9, 2017 12:03:41 PM",
-      "dateFinished": "Jan 9, 2017 12:03:58 PM",
+      "apps": [],
+      "jobName": "paragraph_1483952588708_-1770095793",
+      "id": "20170109-120308_1328511597",
+      "dateCreated": "2017-01-09 12:03:08.000",
+      "dateStarted": "2017-01-09 12:03:41.000",
+      "dateFinished": "2017-01-09 12:03:58.000",
       "status": "FINISHED",
       "progressUpdateIntervalMs": 500
     },
     {
       "text": "%flink\n\nprintln(s\"\"\"The most popular carrier is:\n$carrierName\n\"\"\")",
       "user": "anonymous",
-      "dateUpdated": "Jan 9, 2017 12:09:18 PM",
+      "dateUpdated": "2017-01-09 12:09:18.000",
       "config": {
         "colWidth": 12.0,
         "enabled": true,
@@ -394,9 +395,6 @@
         "params": {},
         "forms": {}
       },
-      "apps": [],
-      "jobName": "paragraph_1483952621624_-1222400539",
-      "id": "20170109-120341_952212268",
       "results": {
         "code": "SUCCESS",
         "msg": [
@@ -406,16 +404,19 @@
           }
         ]
       },
-      "dateCreated": "Jan 9, 2017 12:03:41 PM",
-      "dateStarted": "Jan 9, 2017 12:04:09 PM",
-      "dateFinished": "Jan 9, 2017 12:04:10 PM",
+      "apps": [],
+      "jobName": "paragraph_1483952621624_-1222400539",
+      "id": "20170109-120341_952212268",
+      "dateCreated": "2017-01-09 12:03:41.000",
+      "dateStarted": "2017-01-09 12:04:09.000",
+      "dateFinished": "2017-01-09 12:04:10.000",
       "status": "FINISHED",
       "progressUpdateIntervalMs": 500
     },
     {
       "text": "%md\n### Calculating flights\nThe last step is to filter **Delta Air Lines** flights and group them by months.",
       "user": "anonymous",
-      "dateUpdated": "Jan 9, 2017 12:04:26 PM",
+      "dateUpdated": "2017-01-09 12:04:26.000",
       "config": {
         "colWidth": 12.0,
         "enabled": true,
@@ -432,9 +433,6 @@
         "params": {},
         "forms": {}
       },
-      "apps": [],
-      "jobName": "paragraph_1483952649646_-1553253944",
-      "id": "20170109-120409_2003276881",
       "results": {
         "code": "SUCCESS",
         "msg": [
@@ -444,9 +442,12 @@
           }
         ]
       },
-      "dateCreated": "Jan 9, 2017 12:04:09 PM",
-      "dateStarted": "Jan 9, 2017 12:04:26 PM",
-      "dateFinished": "Jan 9, 2017 12:04:26 PM",
+      "apps": [],
+      "jobName": "paragraph_1483952649646_-1553253944",
+      "id": "20170109-120409_2003276881",
+      "dateCreated": "2017-01-09 12:04:09.000",
+      "dateStarted": "2017-01-09 12:04:26.000",
+      "dateFinished": "2017-01-09 12:04:26.000",
       "status": "FINISHED",
       "progressUpdateIntervalMs": 500
     },
@@ -454,7 +455,7 @@
       "title": "flights grouping",
       "text": "%flink\n\ndef countFlightsPerMonth(flights: DataSet[Flight],\n                         carrier: DataSet[CarrierFlightsCount]) \u003d {\n  val carrierFlights \u003d flights\n    .join(carrier)\n    .where(\"carrierCode\")\n    .equalTo(\"carrierCode\")\n    .map(_._1)\n    \n  carrierFlights\n    .map(flight \u003d\u003e CountByMonth(flight.month, 1))\n    .groupBy(\"month\")\n    .sum(\"count\")\n    .sortPartition(\"month\", Order.ASCENDING)\n}\n\nval bestCarrierFlights_98 \u003d countFlightsPerMonth(flights98, bestCarrier)\nval bestCarrierFlights_99 \u003d countFlightsPerMonth(flights99, bestCarrier)\nval bestCarrierFlights_00 \u003d countFlightsPerMonth(flights00, bestCarrier)",
       "user": "anonymous",
-      "dateUpdated": "Jan 9, 2017 12:05:06 PM",
+      "dateUpdated": "2017-01-09 12:05:06.000",
       "config": {
         "colWidth": 12.0,
         "enabled": true,
@@ -472,9 +473,6 @@
         "params": {},
         "forms": {}
       },
-      "apps": [],
-      "jobName": "paragraph_1483952665972_667547355",
-      "id": "20170109-120425_2018337048",
       "results": {
         "code": "SUCCESS",
         "msg": [
@@ -484,9 +482,12 @@
           }
         ]
       },
-      "dateCreated": "Jan 9, 2017 12:04:25 PM",
-      "dateStarted": "Jan 9, 2017 12:04:50 PM",
-      "dateFinished": "Jan 9, 2017 12:04:51 PM",
+      "apps": [],
+      "jobName": "paragraph_1483952665972_667547355",
+      "id": "20170109-120425_2018337048",
+      "dateCreated": "2017-01-09 12:04:25.000",
+      "dateStarted": "2017-01-09 12:04:50.000",
+      "dateFinished": "2017-01-09 12:04:51.000",
       "status": "FINISHED",
       "progressUpdateIntervalMs": 500
     },
@@ -494,7 +495,7 @@
       "title": "making a results table",
       "text": "%flink\n\ndef monthAsString(month: Int): String \u003d {\n  month match {\n    case 1 \u003d\u003e \"Jan\"\n    case 2 \u003d\u003e \"Feb\"\n    case 3 \u003d\u003e \"Mar\"\n    case 4 \u003d\u003e \"Apr\"\n    case 5 \u003d\u003e \"May\"\n    case 6 \u003d\u003e \"Jun\"\n    case 7 \u003d\u003e \"Jul\"\n    case 8 \u003d\u003e \"Aug\"\n    case 9 \u003d\u003e \"Sept\"\n    case 10 \u003d\u003e \"Oct\"\n    case 11 \u003d\u003e \"Nov\"\n    case 12 \u003d\u003e \"Dec\"\n  }\n}\n\n// We should put all the results into a common DataFrame\n// to show them in a common picture\nval bestCarrierFlights \u003d bestCarrierFlights_98\n  .join(bestCarrierFlights_99)\n  .where(\"month\")\n  .equalTo(\"month\")\n  .map(tuple \u003d\u003e (tuple._1.month, tuple._1.count, tuple._2.count))\n  .join(bestCarrierFlights_00)\n  .where(0)\n  .equalTo(\"month\")\n  .map(tuple \u003d\u003e (tuple._1._1, tuple._1._2, tuple._1._3, tuple._2.count))\n  .collect\n  \nvar flightsByMonthTable \u003d s\"Month\\t1998\\t1999\\t2000\\n\"\nbestCarrierFlights.foreach(data \u003d\u003e flightsByMonthTable +\u003d s\"${monthAsString(data._1)}\\t${data._2}\\t${data._3}\\t${data._4}\\n\")",
       "user": "anonymous",
-      "dateUpdated": "Jan 9, 2017 12:06:03 PM",
+      "dateUpdated": "2017-01-09 12:06:03.000",
       "config": {
         "colWidth": 12.0,
         "enabled": true,
@@ -512,9 +513,6 @@
         "params": {},
         "forms": {}
       },
-      "apps": [],
-      "jobName": "paragraph_1483952690164_-1061667443",
-      "id": "20170109-120450_1574916350",
       "results": {
         "code": "SUCCESS",
         "msg": [
@@ -524,9 +522,12 @@
           }
         ]
       },
-      "dateCreated": "Jan 9, 2017 12:04:50 PM",
-      "dateStarted": "Jan 9, 2017 12:05:24 PM",
-      "dateFinished": "Jan 9, 2017 12:05:59 PM",
+      "apps": [],
+      "jobName": "paragraph_1483952690164_-1061667443",
+      "id": "20170109-120450_1574916350",
+      "dateCreated": "2017-01-09 12:04:50.000",
+      "dateStarted": "2017-01-09 12:05:24.000",
+      "dateFinished": "2017-01-09 12:05:59.000",
       "status": "FINISHED",
       "progressUpdateIntervalMs": 500
     },
@@ -534,7 +535,7 @@
       "title": "\"Delta Air Lines\" flights count by months",
       "text": "%flink\n\nprintln(s\"\"\"%table\n$flightsByMonthTable\n\"\"\")",
       "user": "anonymous",
-      "dateUpdated": "Jan 9, 2017 12:06:17 PM",
+      "dateUpdated": "2019-05-23 17:35:13.525",
       "config": {
         "colWidth": 12.0,
         "enabled": true,
@@ -545,7 +546,12 @@
               "height": 300.0,
               "optionOpen": false,
               "setting": {
-                "lineChart": {}
+                "lineChart": {
+                  "rotate": {
+                    "degree": "-45"
+                  },
+                  "xLabelStatus": "default"
+                }
               },
               "commonSetting": {},
               "keys": [
@@ -583,15 +589,13 @@
         },
         "editorMode": "ace/mode/scala",
         "title": true,
-        "lineNumbers": true
+        "lineNumbers": true,
+        "fontSize": 9.0
       },
       "settings": {
         "params": {},
         "forms": {}
       },
-      "apps": [],
-      "jobName": "paragraph_1483952724460_191505697",
-      "id": "20170109-120524_2037622815",
       "results": {
         "code": "SUCCESS",
         "msg": [
@@ -601,16 +605,19 @@
           }
         ]
       },
-      "dateCreated": "Jan 9, 2017 12:05:24 PM",
-      "dateStarted": "Jan 9, 2017 12:06:07 PM",
-      "dateFinished": "Jan 9, 2017 12:06:08 PM",
+      "apps": [],
+      "jobName": "paragraph_1483952724460_191505697",
+      "id": "20170109-120524_2037622815",
+      "dateCreated": "2017-01-09 12:05:24.000",
+      "dateStarted": "2017-01-09 12:06:07.000",
+      "dateFinished": "2017-01-09 12:06:08.000",
       "status": "FINISHED",
       "progressUpdateIntervalMs": 500
     },
     {
       "text": "%md\n### Results\nLooking at this chart we can say that February is the most unpopular month, but this is only because it has less days (28 or 29) than the other months (30 or 31). To receive more fair picture we should calculate the average flights count per day for each month.",
       "user": "anonymous",
-      "dateUpdated": "Jan 9, 2017 12:06:34 PM",
+      "dateUpdated": "2017-01-09 12:06:34.000",
       "config": {
         "colWidth": 12.0,
         "enabled": true,
@@ -627,9 +634,6 @@
         "params": {},
         "forms": {}
       },
-      "apps": [],
-      "jobName": "paragraph_1483952767719_-1010557136",
-      "id": "20170109-120607_67673280",
       "results": {
         "code": "SUCCESS",
         "msg": [
@@ -639,16 +643,19 @@
           }
         ]
       },
-      "dateCreated": "Jan 9, 2017 12:06:07 PM",
-      "dateStarted": "Jan 9, 2017 12:06:34 PM",
-      "dateFinished": "Jan 9, 2017 12:06:34 PM",
+      "apps": [],
+      "jobName": "paragraph_1483952767719_-1010557136",
+      "id": "20170109-120607_67673280",
+      "dateCreated": "2017-01-09 12:06:07.000",
+      "dateStarted": "2017-01-09 12:06:34.000",
+      "dateFinished": "2017-01-09 12:06:34.000",
       "status": "FINISHED",
       "progressUpdateIntervalMs": 500
     },
     {
       "text": "%flink\n\ndef daysInMonth(month: Int, year: Int): Int \u003d {\n  month match {\n    case 1 \u003d\u003e 31\n    case 2 \u003d\u003e if (year % 4 \u003d\u003d 0) {\n        29\n    } else {\n        28\n    }\n    case 3 \u003d\u003e 31\n    case 4 \u003d\u003e 30\n    case 5 \u003d\u003e 31\n    case 6 \u003d\u003e 30\n    case 7 \u003d\u003e 31\n    case 8 \u003d\u003e 31\n    case 9 \u003d\u003e 30\n    case 10 \u003d\u003e 31\n    case 11 \u003d\u003e 30\n    case 12 \u003d\u003e 31\n  }\n}\n\n\nvar flightsByDayTable \u003d s\"Month\\t1998\\t1999\\t2000\\n\"\n\nbestCarrierFlights.foreach(data \u003d\u003e flightsByDayTable +\u003d s\"${monthAsString(data._1)}\\t${data._2/daysInMonth(data._1,1998)}\\t${data._3/daysInMonth(data._1,1999)}\\t${data._4/daysInMonth(data._1,2000)}\\n\")",
       "user": "anonymous",
-      "dateUpdated": "Jan 9, 2017 12:06:58 PM",
+      "dateUpdated": "2017-01-09 12:06:58.000",
       "config": {
         "colWidth": 12.0,
         "enabled": true,
@@ -665,9 +672,6 @@
         "params": {},
         "forms": {}
       },
-      "apps": [],
-      "jobName": "paragraph_1483952794097_-785833130",
-      "id": "20170109-120634_492170963",
       "results": {
         "code": "SUCCESS",
         "msg": [
@@ -677,9 +681,12 @@
           }
         ]
       },
-      "dateCreated": "Jan 9, 2017 12:06:34 PM",
-      "dateStarted": "Jan 9, 2017 12:06:53 PM",
-      "dateFinished": "Jan 9, 2017 12:06:53 PM",
+      "apps": [],
+      "jobName": "paragraph_1483952794097_-785833130",
+      "id": "20170109-120634_492170963",
+      "dateCreated": "2017-01-09 12:06:34.000",
+      "dateStarted": "2017-01-09 12:06:53.000",
+      "dateFinished": "2017-01-09 12:06:53.000",
       "status": "FINISHED",
       "progressUpdateIntervalMs": 500
     },
@@ -687,7 +694,7 @@
       "title": "\"Delta Air Lines\" flights count by days",
       "text": "%flink\n\nprintln(s\"\"\"%table\n$flightsByDayTable\n\"\"\")",
       "user": "anonymous",
-      "dateUpdated": "Jan 9, 2017 12:10:56 PM",
+      "dateUpdated": "2019-05-23 17:35:13.240",
       "config": {
         "colWidth": 12.0,
         "enabled": true,
@@ -698,7 +705,12 @@
               "height": 300.0,
               "optionOpen": false,
               "setting": {
-                "lineChart": {}
+                "lineChart": {
+                  "rotate": {
+                    "degree": "-45"
+                  },
+                  "xLabelStatus": "default"
+                }
               },
               "commonSetting": {},
               "keys": [
@@ -736,15 +748,13 @@
         },
         "editorMode": "ace/mode/scala",
         "title": true,
-        "lineNumbers": true
+        "lineNumbers": true,
+        "fontSize": 9.0
       },
       "settings": {
         "params": {},
         "forms": {}
       },
-      "apps": [],
-      "jobName": "paragraph_1483952813391_1847418990",
-      "id": "20170109-120653_1870236569",
       "results": {
         "code": "SUCCESS",
         "msg": [
@@ -754,15 +764,18 @@
           }
         ]
       },
-      "dateCreated": "Jan 9, 2017 12:06:53 PM",
-      "dateStarted": "Jan 9, 2017 12:07:22 PM",
-      "dateFinished": "Jan 9, 2017 12:07:23 PM",
+      "apps": [],
+      "jobName": "paragraph_1483952813391_1847418990",
+      "id": "20170109-120653_1870236569",
+      "dateCreated": "2017-01-09 12:06:53.000",
+      "dateStarted": "2017-01-09 12:07:22.000",
+      "dateFinished": "2017-01-09 12:07:23.000",
       "status": "FINISHED",
       "progressUpdateIntervalMs": 500
     },
     {
       "text": "%flink\n",
-      "dateUpdated": "Jan 9, 2017 12:07:22 PM",
+      "dateUpdated": "2017-01-09 12:07:22.000",
       "config": {},
       "settings": {
         "params": {},
@@ -771,36 +784,19 @@
       "apps": [],
       "jobName": "paragraph_1483952842919_587228425",
       "id": "20170109-120722_939892827",
-      "dateCreated": "Jan 9, 2017 12:07:22 PM",
+      "dateCreated": "2017-01-09 12:07:22.000",
       "status": "READY",
       "progressUpdateIntervalMs": 500
     }
   ],
   "name": "Zeppelin Tutorial/Using Flink for batch processing",
   "id": "2C35YU814",
-  "angularObjects": {
-    "2C4PVECE6:shared_process": [],
-    "2C4US9MUF:shared_process": [],
-    "2C4FYNB4G:shared_process": [],
-    "2C4GX28KP:shared_process": [],
-    "2C648AXXN:shared_process": [],
-    "2C3MSEJ2F:shared_process": [],
-    "2C6F2N6BT:shared_process": [],
-    "2C3US2RTN:shared_process": [],
-    "2C3TYMD6K:shared_process": [],
-    "2C3FDPZRX:shared_process": [],
-    "2C5TEARYX:shared_process": [],
-    "2C5D6NSNG:shared_process": [],
-    "2C6FVVEAD:shared_process": [],
-    "2C582KNWG:shared_process": [],
-    "2C6ZMVGM7:shared_process": [],
-    "2C6UYQG8R:shared_process": [],
-    "2C666VZT2:shared_process": [],
-    "2C4JRCY3K:shared_process": [],
-    "2C64W5T9D:shared_process": []
-  },
+  "noteParams": {},
+  "noteForms": {},
+  "angularObjects": {},
   "config": {
-    "looknfeel": "default"
+    "looknfeel": "default",
+    "isZeppelinNotebookCronEnable": false
   },
   "info": {}
 }

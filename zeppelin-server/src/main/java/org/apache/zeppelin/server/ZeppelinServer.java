@@ -52,15 +52,7 @@ import org.apache.zeppelin.interpreter.InterpreterSettingManager;
 import org.apache.zeppelin.notebook.Notebook;
 import org.apache.zeppelin.notebook.NotebookAuthorization;
 import org.apache.zeppelin.notebook.repo.NotebookRepoSync;
-import org.apache.zeppelin.rest.ConfigurationsRestApi;
-import org.apache.zeppelin.rest.CredentialRestApi;
-import org.apache.zeppelin.rest.HeliumRestApi;
-import org.apache.zeppelin.rest.InterpreterRestApi;
-import org.apache.zeppelin.rest.LoginRestApi;
-import org.apache.zeppelin.rest.NotebookRepoRestApi;
-import org.apache.zeppelin.rest.NotebookRestApi;
-import org.apache.zeppelin.rest.SecurityRestApi;
-import org.apache.zeppelin.rest.ZeppelinRestApi;
+import org.apache.zeppelin.rest.*;
 import org.apache.zeppelin.scheduler.SchedulerFactory;
 import org.apache.zeppelin.search.LuceneSearch;
 import org.apache.zeppelin.search.SearchService;
@@ -180,12 +172,13 @@ public class ZeppelinServer extends Application {
         interpreterSettingManager);
 
     // create bundle
+
     try {
       heliumBundleFactory.buildAllPackages(helium.getBundlePackagesToBundle());
     } catch (Exception e) {
       LOG.error(e.getMessage(), e);
     }
-    
+
     // to update notebook from application event from remote process.
     heliumApplicationFactory.setNotebook(notebook);
     // to update fire websocket event on application event.
@@ -454,6 +447,11 @@ public class ZeppelinServer extends Application {
     InterpreterRestApi interpreterApi = new InterpreterRestApi(interpreterSettingManager,
         notebookWsServer);
     singletons.add(interpreterApi);
+
+    RemoteInterpreterRestApi remoteInterpreterRestApi =
+            new RemoteInterpreterRestApi(interpreterSettingManager, notebookWsServer);
+    singletons.add(remoteInterpreterRestApi);
+
 
     CredentialRestApi credentialApi = new CredentialRestApi(credentials);
     singletons.add(credentialApi);

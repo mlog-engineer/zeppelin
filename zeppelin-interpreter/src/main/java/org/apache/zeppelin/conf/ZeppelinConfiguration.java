@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -41,8 +42,7 @@ public class ZeppelinConfiguration extends XMLConfiguration {
   private static final long serialVersionUID = 4749305895693848035L;
   private static final Logger LOG = LoggerFactory.getLogger(ZeppelinConfiguration.class);
 
-  private static final String HELIUM_PACKAGE_DEFAULT_URL =
-      "https://s3.amazonaws.com/helium-package/helium.json";
+  private static final String HELIUM_PACKAGE_DEFAULT_URL = "";
   private static ZeppelinConfiguration conf;
 
   private Map<String, String> properties = new HashMap<>();

@@ -1,0 +1,85 @@
+<!--
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<!-- Here the controller <JobmanagerCtrl> is not needed because explicitly set in the app.js (route) -->
+<div class="jobManagerHead">
+    <div class="header">
+      <div class="row">
+        <div class="col-md-12">
+          <h3 class="new_h3">
+            Remote Interpreter Server Status
+          </h3>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          Restart Interpreter. Will be lazily started on next run.
+        </div>
+      </div>
+    </div>
+    <div style="margin: 0px">
+      <hr style="margin-top: 10px; margin-bottom: 10px;" />
+    </div>
+<!--   
+    <div class="row">
+      <div
+        class="col-md-6 text-right"
+        style="padding-top: 6px;">
+        <span
+          ng-repeat="jobStatus in ['STOPED', 'RUNNING']"
+          ng-switch="jobStatus">
+          <span
+            ng-switch-when="RUNNING"
+            style="margin-right: 3px;">
+            <i style="color: blue" class="fa fa-spinner"
+                ng-click="">
+            </i>
+            {{jobStatus}}
+          </span>
+          <span
+            ng-switch-when="STOPED"
+            style="margin-right: 3px;">
+            <i style="color: red" class="fa fa-circle"
+                ng-click="">
+            </i>
+            {{jobStatus}}
+          </span>
+        </span>
+      </div>
+    </div>
+  </div> -->
+
+ 
+</div>
+  
+<div  data-ng-init="init()" class="note-content">
+  <div class="note-jump"></div>
+  <div
+    ng-if="remoteInterpreters.length > 0"
+    ng-repeat="interpreter in remoteInterpreters"
+    class="paragraph-col note-content-ssl">
+    <div ng-include src="'app/remoteinterpreter/interpreter/interpreter.html'"
+          class="job-space box job-margin"
+          ng-controller="JobCtrl">
+    </div>
+  </div>
+  <div
+    ng-if="remoteInterpreters.length <= 0"
+    class="paragraph-col">
+    <div
+      class="job-space box job-margin text-center">
+      No Remote Interpreter Server found
+    </div>
+  </div>
+  <div style="clear:both;height:10px"></div>
+</div>

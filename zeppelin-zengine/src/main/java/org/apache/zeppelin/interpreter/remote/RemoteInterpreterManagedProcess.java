@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -189,6 +190,7 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
 
       logger.info("Run interpreter process {}", cmdLine);
       executor.execute(cmdLine, procEnv, this);
+      this.startTime = new Date();
     } catch (IOException e) {
       running.set(false);
       throw new RuntimeException(e);
@@ -234,6 +236,7 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
 
     executor = null;
     watchdog = null;
+    startTime = null;
     running.set(false);
     logger.info("Remote process terminated");
   }

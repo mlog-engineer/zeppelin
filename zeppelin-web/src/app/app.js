@@ -111,6 +111,10 @@ let zeppelinWebApp = angular.module('zeppelinWebApp', requiredModules)
         templateUrl: 'app/jobmanager/jobmanager.html',
         controller: 'JobManagerCtrl',
       })
+      .when('/remoteinterpreter', {
+        templateUrl: 'app/remoteinterpreter/remoteinterpreter.html',
+        controller: 'RemoteinterpreterCtrl',
+      })
       .when('/interpreter', {
         templateUrl: 'app/interpreter/interpreter.html',
         controller: 'InterpreterCtrl',

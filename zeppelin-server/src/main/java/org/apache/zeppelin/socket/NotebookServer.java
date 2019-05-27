@@ -2476,7 +2476,9 @@ public class NotebookServer extends WebSocketServlet
 
   private void getInterpreterSettings(NotebookSocket conn, AuthenticationInfo subject)
       throws IOException {
-    List<InterpreterSetting> availableSettings = notebook().getInterpreterSettingManager().get();
+    String user = subject.getUser();
+    List<InterpreterSetting> availableSettings =
+            notebook().getInterpreterSettingManager().getUserAvailableSettings(user);
     conn.send(serializeMessage(
         new Message(OP.INTERPRETER_SETTINGS).put("interpreterSettings", availableSettings)));
   }

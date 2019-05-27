@@ -42,6 +42,8 @@ public class InterpreterOption {
   boolean setPermission;
   List<String> owners;
   boolean isUserImpersonate;
+  //user who created this interpreter,only master user can edit、remove the  interpreter
+  String master;
 
   public boolean isExistingProcess() {
     return isExistingProcess;
@@ -112,7 +114,7 @@ public class InterpreterOption {
     option.setPermission = other.setPermission;
     option.owners = (null == other.owners) ?
         new ArrayList<String>() : new ArrayList<>(other.owners);
-
+    option.master = other.master;
     return option;
   }
 
@@ -122,6 +124,14 @@ public class InterpreterOption {
 
   public int getPort() {
     return port;
+  }
+
+  public String getMaster() {
+    return master;
+  }
+
+  public void  setMaster(String master) {
+    this.master = master;
   }
 
 
